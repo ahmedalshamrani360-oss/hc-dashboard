@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HC Command Center — إدارة رأس المال البشري</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script type="module">
+  // ---------- Firebase setup (shared cloud storage across every device) ----------
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+  import { getDatabase, ref, get, set, remove } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyC_lWi7yGVo-J0mu5UZNxqsSeeIUOuGA0A",
+    authDomain: "hc-command-center.firebaseapp.com",
+    databaseURL: "https://hc-command-center-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "hc-command-center",
+    storageBucket: "hc-command-center.firebasestorage.app",
+    messagingSenderId: "471473323073",
+    appId: "1:471473323073:web:41db2d5095e714f90d5ac0"
+  };
+
+  const fbApp = initializeApp(firebaseConfig);
+  const fbDb = getDatabase(fbApp);
+  const fbAuth = getAuth(fbApp);
+
+  // Expose a small bridge on window so the regular (non-module) script below can use it.
+  window.firebaseStorage = {
+    async get(key){
+      try{
+        const snap = await get(ref(fbDb, key));
+        return snap.exists() ? snap.val() : null;
+      }catch(e){ console.error('firebase get error:', e); return null; }
+    },
+    async set(key, value){
+      try{ await set(ref(fbDb, key), value); return true; }
+      catch(e){ console.error('firebase set error:', e); return false; }
+    },
+    async delete(key){
+      try{ await remove(ref(fbDb, key)); return true; }
+      catch(e){ console.error('firebase delete error:', e); return false; }
+    }
+  };
+
+  // Expose a small Auth bridge on window so the regular (non-module) script below can use it.
+  window.firebaseAuthBridge = {
+    async signIn(email, password){
+      try{
+        await signInWithEmailAndPassword(fbAuth, email, password);
+        return {ok:true};
+      }catch(e){
+        return {ok:false, code: e.code || 'unknown'};
+      }
+    },
+    async signOut(){
+      try{ await signOut(fbAuth); return true; }catch(e){ return false; }
+    },
+    onChange(cb){ onAuthStateChanged(fbAuth, cb); }
+  };
+
+  // Signal to the rest of the app that Firebase is ready to use.
+  window.dispatchEvent(new Event('firebase-ready'));
+</script>
+<style>
+:root{--bg:#f4f7fb;--card:#fff;--ink:#101827;--muted:#667085;--line:#e5e7eb;--blue:#2563eb;--green:#059669;--red:#dc2626;--amber:#d97706;--purple:#7c3aed;--slate:#0f172a;--shadow:0 12px 34px rgba(15,23,42,.08)}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);font-family:Tahoma,Arial,sans-serif;color:var(--ink)}
+.app{display:grid;grid-template-columns:280px 1fr;min-height:100vh} .side{background:#0f172a;color:#fff;padding:22px;position:sticky;top:0;height:100vh;overflow:auto} .brand{display:flex;gap:12px;align-items:center;margin-bottom:18px} .logo{width:46px;height:46px;border-radius:16px;background:linear-gradient(135deg,#2563eb,#7c3aed);display:grid;place-items:center;font-weight:900} .brand b{font-size:16px} .brand span{font-size:12px;color:#cbd5e1}
+.navlabel{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin:16px 6px 8px}
+.nav button{width:100%;border:0;background:transparent;color:#cbd5e1;text-align:right;padding:12px 13px;border-radius:14px;cursor:pointer;font-weight:700;margin:4px 0;font-size:13.5px} .nav button.active,.nav button:hover{background:rgba(255,255,255,.1);color:#fff}
+.nav button.section-btn{display:flex;justify-content:space-between;align-items:center}
+.nav button.section-btn .cnt{font-size:11px;background:rgba(255,255,255,.12);border-radius:999px;padding:2px 8px;font-weight:800}
+.nav button.section-btn.active .cnt{background:rgba(255,255,255,.25)}
+.side-note{font-size:12px;color:#94a3b8;line-height:1.8;margin-top:22px;border-top:1px solid rgba(255,255,255,.12);padding-top:16px}
+.main{padding:24px 28px} .section{display:none} .section.active{display:block} .top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:18px} h1{margin:0 0 8px;font-size:26px} h2{font-size:19px;margin:0 0 10px} h3{font-size:15px;margin:0 0 10px} p{margin:0;color:var(--muted);line-height:1.7} .actions{display:flex;gap:10px;flex-wrap:wrap} .btn{border:1px solid var(--line);background:#fff;padding:11px 14px;border-radius:14px;cursor:pointer;font-weight:800} .btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)} .btn.green{background:#ecfdf5;color:#065f46;border-color:#a7f3d0} .btn.red{background:#fff1f2;color:#991b1b;border-color:#fecdd3}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:18px} .grid{display:grid;gap:16px} .kpis{grid-template-columns:repeat(4,minmax(160px,1fr))} .two{grid-template-columns:2fr 1fr} .three{grid-template-columns:repeat(3,1fr)} .filters{grid-template-columns:2fr 1fr;margin-bottom:16px} .filter label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px} select,input{width:100%;border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff;font-family:inherit} .kpi label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em} .kpi .num{font-size:28px;font-weight:900;margin:10px 0 6px;direction:ltr;text-align:right} .kpi small{color:var(--muted)}
+.alerts{grid-template-columns:repeat(3,1fr);margin:16px 0} .alert{border-radius:16px;padding:14px;border:1px solid;font-weight:800} .alert.red{background:#fff1f2;color:#991b1b;border-color:#fecdd3} .alert.amber{background:#fffbeb;color:#92400e;border-color:#fde68a} .alert.green{background:#ecfdf5;color:#065f46;border-color:#a7f3d0}
+table{width:100%;border-collapse:collapse;font-size:13px} th,td{padding:11px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap} th{background:#f8fafc;color:#475467;font-size:12px;position:sticky;top:0} .tablewrap{max-height:420px;overflow:auto;border:1px solid var(--line);border-radius:16px} .pill{display:inline-block;padding:5px 9px;border-radius:999px;font-size:12px;font-weight:900} .pill.green{background:#dcfce7;color:#166534} .pill.red{background:#fee2e2;color:#991b1b} .pill.amber{background:#fef3c7;color:#92400e} .muted{color:var(--muted)}
+.admin-login{max-width:460px;margin:30px auto;background:#fff;border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);padding:24px}.admin-login h2{margin:0 0 10px}.admin-login .row{display:flex;gap:10px;margin-top:14px}.admin-login input{flex:1}.admin-content.locked{display:none}.adminbox{border:2px dashed #cbd5e1;border-radius:24px;background:#fff;padding:28px;text-align:center;cursor:pointer} .adminbox input{display:none} .note{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;border-radius:16px;padding:13px;margin:14px 0;line-height:1.8} .hide{display:none!important} .metric-line{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:10px 0;color:#344054} .metric-line b{direction:ltr} .chart-empty-msg{padding:30px 10px;text-align:center;color:var(--muted);font-size:13px}
+@media(max-width:1100px){.app{grid-template-columns:1fr}.side{height:auto;position:relative}.kpis,.alerts,.two,.three,.filters{grid-template-columns:1fr}.top{flex-direction:column}}
+#authGate{position:fixed;inset:0;background:linear-gradient(160deg,#0f172a,#1e293b);display:grid;place-items:center;z-index:9999;padding:20px}
+#authGate .box{max-width:400px;width:100%;background:#fff;border-radius:24px;box-shadow:0 20px 60px rgba(0,0,0,.35);padding:30px}
+#authGate .brand2{display:flex;gap:12px;align-items:center;margin-bottom:20px}
+#authGate .logo2{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#2563eb,#7c3aed);display:grid;place-items:center;font-weight:900;color:#fff}
+#authGate h2{margin:0 0 6px;font-size:19px}
+#authGate p{color:var(--muted);margin-bottom:18px;line-height:1.7;font-size:13px}
+#authGate label{display:block;font-size:12px;color:var(--muted);margin:12px 0 6px}
+#authGate input{width:100%;border:1px solid var(--line);border-radius:12px;padding:11px;font-family:inherit}
+#authGate button{width:100%;margin-top:18px;background:var(--blue);color:#fff;border:0;padding:12px;border-radius:14px;font-weight:800;cursor:pointer;font-size:14px}
+#authGate button:disabled{opacity:.6;cursor:default}
+#authGate .err{color:#dc2626;font-size:12.5px;margin-top:10px;line-height:1.7}
+#authGate .checking{color:#94a3b8;font-size:13px;text-align:center}
+.app.gated{display:none}
+#logoutBtn{width:100%;margin-top:10px;background:rgba(255,255,255,.08);color:#fecaca;border:1px solid rgba(255,255,255,.12)}
+</style>
+</head>
+<body>
+
+<div id="authGate">
+  <div class="box">
+    <div class="brand2"><div class="logo2">HC</div><div><b>HC Command Center</b><br><span style="font-size:12px;color:var(--muted)">رأس المال البشري — Alesayi Motors</span></div></div>
+    <div id="authChecking" class="checking">جاري التحقق من تسجيل الدخول...</div>
+    <div id="authForm" class="hide">
+      <h2>تسجيل الدخول</h2>
+      <p>هذه الصفحة تحتوي على بيانات موظفين حساسة. الدخول متاح فقط لمن لديه حساب مصرّح.</p>
+      <label>البريد الإلكتروني</label>
+      <input id="authEmail" type="email" placeholder="name@company.com" onkeydown="if(event.key==='Enter')document.getElementById('authPassword').focus()">
+      <label>كلمة المرور</label>
+      <input id="authPassword" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doSignIn()">
+      <button id="authSubmitBtn" onclick="doSignIn()">دخول</button>
+      <div id="authError" class="err hide"></div>
+    </div>
+  </div>
+</div>
+
+<div class="app gated" id="appRoot">
+  <aside class="side">
+    <div class="brand"><div class="logo">HC</div><div><b>HC Command Center</b><br><span>رأس المال البشري — Alesayi Motors</span></div></div>
+
+    <div class="navlabel">الأقسام</div>
+    <div class="nav" id="sectionNav"></div>
+
+    <div class="navlabel">أدوات</div>
+    <div class="nav">
+      <button data-page="admin" onclick="showPage('admin')">🔒 رفع البيانات (أدمن)</button>
+    </div>
+
+    <div class="side-note">البيانات تُحفظ وتُزامن تلقائياً — أي جهاز يفتح هذا الرابط ويعمل تحديث للصفحة يشوف آخر ملف تم رفعه.
+      <div id="authUserLabel" style="margin-top:10px;color:#cbd5e1"></div>
+      <button id="logoutBtn" class="btn" onclick="doSignOut()">تسجيل الخروج</button>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <section class="section active" id="dashboard">
+      <div class="top">
+        <div>
+          <h1 id="dashTitle">كل الأقسام</h1>
+          <p id="dashSubtitle">نظرة عامة على أقسام رأس المال البشري المحددة</p>
+        </div>
+      </div>
+
+      <div class="grid alerts">
+        <div class="alert green" id="saudAlert">—</div>
+        <div class="alert amber" id="turnAlert">—</div>
+        <div class="alert red" id="dataAlert" style="cursor:pointer" onclick="toggleMissingDetails()" title="اضغط لعرض تفاصيل الناقصين">—</div>
+      </div>
+
+      <div class="card" id="missingDataCard" style="margin:0 0 16px;display:none">
+        <h3>الموظفون الذين لديهم بيانات ناقصة</h3>
+        <div class="tablewrap"><table id="missingDataTable"></table></div>
+      </div>
+
+      <div class="grid kpis">
+        <div class="card kpi"><label>عدد الموظفين النشطين</label><div class="num" id="kActive">0</div><small>ضمن الفلتر الحالي</small></div>
+        <div class="card kpi"><label>نسبة السعودة</label><div class="num" id="kSaud">0%</div><small>من إجمالي النشطين بالفلتر</small></div>
+        <div class="card kpi"><label>إجمالي الرواتب</label><div class="num" id="kPayroll">0</div><small>ريال سعودي / شهرياً</small></div>
+        <div class="card kpi"><label>متوسط الراتب</label><div class="num" id="kAvg">0</div><small>ريال سعودي</small></div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <h3>تفصيل حالات "النشطين" — <span id="statusBreakdownTotal" class="muted" style="font-weight:400;font-size:13px"></span></h3>
+        <p style="margin-bottom:8px">هذا التفصيل يوضح كم موظف نشط فعلياً بدون أي إشعار، وكم موظف "نشط" بالنظام لكن عنده إشعار مغادرة (استقالة، تقاعد، انتهاء عقد...) بتاريخ إنهاء لسه ما وصل.</p>
+        <div id="statusBreakdown"></div>
+      </div>
+
+
+      <div class="grid filters" style="margin-top:16px">
+        <div class="filter"><label>بحث بالاسم / الرقم الوظيفي / المسمى</label><input id="fSearch" placeholder="اكتب هنا..." oninput="renderAll()"></div>
+        <div class="filter" id="statusFilterWrap"><label>الحالة</label><select id="fStatus" onchange="renderAll()"><option value="active">النشطون فقط</option><option value="all">الكل (شامل من غادر)</option></select></div>
+      </div>
+
+      <div class="grid two" style="margin-top:16px">
+        <div class="card"><h3 id="chartATitle">توزيع الموظفين</h3><canvas id="chartA" height="230"></canvas></div>
+        <div class="card"><h3>السعودة</h3><canvas id="chartB" height="230"></canvas></div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <h3>قائمة الموظفين</h3>
+        <div class="tablewrap"><table id="empTable"></table></div>
+      </div>
+    </section>
+
+    <!-- ADMIN -->
+    <section class="section" id="admin">
+      <div id="adminLogin" class="admin-login">
+        <h2>دخول الأدمن</h2>
+        <p>أدخل الرقم السري لتتمكن من رفع ملف إكسل جديد.</p>
+        <div class="row"><input id="adminPass" type="password" placeholder="الرقم السري" onkeydown="if(event.key==='Enter')unlockAdmin()"><button class="btn primary" onclick="unlockAdmin()">دخول</button></div>
+        <p id="adminError" class="hide" style="color:#dc2626;margin-top:10px">الرقم السري غير صحيح</p>
+      </div>
+      <div id="adminContent" class="admin-content locked">
+        <div class="top"><div><h1>رفع البيانات</h1><p>ارفع ملف إكسل كامل (يمكن أن يحتوي على كل موظفي الشركة وأقسامها) — سيتم قراءته تلقائياً واستخراج الأقسام الستة المحددة فقط، ثم عرض من انضم ومن غادر مقارنة بالبيانات الحالية.</p></div>
+          <div class="actions"><button class="btn red" onclick="lockAdmin()">قفل / خروج</button><button class="btn" onclick="resetDefault()">استعادة البيانات الافتراضية</button></div>
+        </div>
+        <div class="note">الأقسام المعتمدة: HC Admin، HC Operation، HC Business Partner، OD (Organization Development)، Talent Acquisition، Training. أي موظف خارج هذه الأقسام في الملف المرفوع سيتم تجاهله تلقائياً.<br>أي صف يكون المسمى الوظيفي فيه يحتوي على "SJAHI" (طلاب) يُستثنى تلقائياً حتى لو كان تحت قسم التدريب — لأنهم مو موظفين.<br>كل ملف جديد يُرفع يستبدل البيانات السابقة بالكامل على كل الأجهزة (لا يتم الاحتفاظ بنسخ قديمة).</div>
+        <div class="adminbox" onclick="document.getElementById('file').click()" ondragover="event.preventDefault()" ondrop="event.preventDefault();readUpload(event.dataTransfer.files[0])">
+          <input type="file" id="file" accept=".xlsx,.xls" onchange="readUpload(this.files[0])">
+          <div style="font-size:40px">📤</div>
+          <div style="font-weight:800;margin-top:8px">اسحب ملف Excel هنا أو اضغط للاختيار</div>
+          <div class="muted" style="margin-top:6px">.xlsx / .xls</div>
+        </div>
+        <div class="card" id="uploadResult" style="margin-top:16px">لم يتم رفع أي ملف بعد. البيانات الحالية محمّلة من آخر تحديث محفوظ أو من الملف الافتراضي.</div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+const ADMIN_PASSWORD = '360';
+
+const TARGET_SECTIONS = [
+  {key:'all', label:'كل الأقسام'},
+  {key:'hcadmin', label:'HC Admin'},
+  {key:'hcop', label:'HC Operation'},
+  {key:'hcbp', label:'HC Business Partner'},
+  {key:'od', label:'OD (Organization Development)'},
+  {key:'ta', label:'Talent Acquisition'},
+  {key:'training', label:'Training'}
+];
+const SECTION_PATTERNS = {
+  'human capital admin':'hcadmin','hc admin':'hcadmin',
+  'hc operation':'hcop','human capital operation':'hcop','hr operation':'hcop',
+  'hc business partner':'hcbp',
+  'hc organization development':'od','human capital organization development':'od','organization development':'od',
+  'talant acquisition':'ta','talent acquisition':'ta',
+  'training':'training'
+};
+
+const DEFAULT_ROWS_RAW = [{"employeeNo":23269,"nameAr":"محمد خليل ابراهيم مكاوي","name":"Mohammed Khalil Ibrahim Makkawi","hireDate":"2026-05-06","terminationDate":"","jobAr":"مدير عام الموارد البشرية","job":"GM Human Resources","department":"Human Capital","section":"Human Capital Admin","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"بندر سعيد عمر العيسائي","manager":"Bander Saeed Omer Alesayi","nationality":"Saudi","gender":"Male","mobile":548836842,"email":"m.makkawi@alesayi.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"","basicSalary":0,"housing":0,"transport":0,"totalSalary":0,"status":"Active","source":"MD"},{"employeeNo":22960,"nameAr":"سعود جعفر محمد سعدون","name":"Saud Jaffar Mohammed Sadoon","hireDate":"2024-06-02","terminationDate":"","jobAr":"مساعد اداري","job":"Admin Assistant","department":"Human Capital","section":"Human Capital Admin","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"محمد خليل ابراهيم مكاوي","manager":"Mohammed Khalil Ibrahim Makkawi","nationality":"India","gender":"Male","mobile":572579232,"email":"sadoon_sj@hotmail.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - غير سعودي","basicSalary":5500,"housing":1375,"transport":550,"totalSalary":7425,"status":"Active","source":"MD"},{"employeeNo":21392,"nameAr":"محمد أحمد عبدالله عسيري","name":"Mohammed Ahmad Abdullah Asiri","hireDate":"2012-05-09","terminationDate":"","jobAr":"مدير عمليات الموارد البشرية","job":"HR Operation Manager","department":"Human Capital","section":"HC Operation","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"محمد خليل ابراهيم مكاوي","manager":"Mohammed Khalil Ibrahim Makkawi","nationality":"Saudi","gender":"Male","mobile":552778658,"email":"masiri@alesayi-motors.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":13333,"housing":3334,"transport":1333,"totalSalary":18150,"status":"Active","source":"MD"},{"employeeNo":21620,"nameAr":"عبدالله محمد عبدالله الشيخي","name":"Abdullah Mohammed Abdullah Alshaikhi","hireDate":"2014-05-14","terminationDate":"","jobAr":"أخصائي أول موارد بشرية","job":"Senior HR Specialist","department":"Human Capital","section":"HC Operation","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"محمد أحمد عبدالله عسيري","manager":"Mohammed Ahmad Abdullah Asiri","nationality":"Saudi","gender":"Male","mobile":566676997,"email":"aalshaikhi@alesayi-motors.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":8000,"housing":2000,"transport":800,"totalSalary":10800,"status":"Active","source":"MD"},{"employeeNo":22534,"nameAr":"مصطفى بكر مصطفى برناوي","name":"Mustafa Baker Mustafa Barnawi","hireDate":"2021-05-02","terminationDate":"","jobAr":"اخصائي موارد بشرية","job":"HR Specialist","department":"Human Capital","section":"HC Operation","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"محمد أحمد عبدالله عسيري","manager":"Mohammed Ahmad Abdullah Asiri","nationality":"Saudi","gender":"Male","mobile":509551156,"email":"mbarnawi@alesayi-motors.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":7000,"housing":1750,"transport":700,"totalSalary":9450,"status":"Active","source":"MD"},{"employeeNo":22560,"nameAr":"صالحه سعيد ابراهيم باداود","name":"Saleha Saeed Ibrahim Badawood","hireDate":"2021-09-01","terminationDate":"","jobAr":"اخصائي موارد بشرية","job":"HR Specialist","department":"Human Capital","section":"HC Operation","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"محمد أحمد عبدالله عسيري","manager":"Mohammed Ahmad Abdullah Asiri","nationality":"Saudi","gender":"Female","mobile":569468338,"email":"sbadawood@alesayi-motors.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":7000,"housing":1750,"transport":700,"totalSalary":9450,"status":"Active","source":"MD"},{"employeeNo":22627,"nameAr":"مبارك عبدالرحمن الشهراني","name":"Mubarak Abdulrahman Alshahrani","hireDate":"2022-01-06","terminationDate":"","jobAr":"منسق موارد بشريه وعلاقات حكومية","job":"HR & GOV Coordinator","department":"Human Capital","section":"HC Operation","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"محمد أحمد عبدالله عسيري","manager":"Mohammed Ahmad Abdullah Asiri","nationality":"Saudi","gender":"Male","mobile":566906597,"email":"malShahrani@alesayi-motors.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":4500,"housing":1125,"transport":450,"totalSalary":6475,"status":"Active","source":"MD"},{"employeeNo":22835,"nameAr":"عادل يحي محمد هزازي","name":"Adel Yahya Mohammed Hazazi","hireDate":"2023-08-01","terminationDate":"","jobAr":"مسؤول موارد بشريه وعلاقات حكومية","job":"HR & GOV Officer","department":"Human Capital","section":"HC Operation","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"محمد أحمد عبدالله عسيري","manager":"Mohammed Ahmad Abdullah Asiri","nationality":"Saudi","gender":"Male","mobile":548884843,"email":"ahazazi@alesayi-motors.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":4500,"housing":1125,"transport":450,"totalSalary":7475,"status":"Active","source":"MD"},{"employeeNo":22841,"nameAr":"يحي عبدة يحي عقيلي","name":"Yahya Abdo Yahya Aqili","hireDate":"2023-08-13","terminationDate":"","jobAr":"اخصائي رواتب","job":"Payroll Specialist","department":"Human Capital","section":"HC Operation","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"محمد أحمد عبدالله عسيري","manager":"Mohammed Ahmad Abdullah Asiri","nationality":"Saudi","gender":"Male","mobile":544476875,"email":"yaqili@alesayi-motors.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":8000,"housing":2000,"transport":800,"totalSalary":10800,"status":"Active","source":"MD"},{"employeeNo":22628,"nameAr":"لمياء عبدالرحمن الشهري","name":"Lamya Abdulrahman Alshehri","hireDate":"2022-01-06","terminationDate":"","jobAr":"مستشار قانوني للموارد البشرية","job":"HR Legal Advisor","department":"Human Capital","section":"HC Operation","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"محمد أحمد عبدالله عسيري","manager":"Mohammed Ahmad Abdullah Asiri","nationality":"Saudi","gender":"Female","mobile":509442090,"email":"lalShehri@alesayi-motors.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":6000,"housing":1500,"transport":600,"totalSalary":8100,"status":"Active","source":"MD"},{"employeeNo":23272,"nameAr":"رنا حامد حمدان الحربي","name":"Rana Hamed H Alharbi","hireDate":"2026-05-17","terminationDate":"","jobAr":"مسؤول موارد بشرية","job":"HR Officer","department":"Human Capital","section":"HC Operation","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"محمد أحمد عبدالله عسيري","manager":"Mohammed Ahmad Abdullah Asiri","nationality":"Saudi","gender":"Female","mobile":502517690,"email":"rana.022alharbi@gmail.com","classification":"Non Productive Staff","region":"Western Region","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي (النظام الجديد)","basicSalary":5500,"housing":1375,"transport":550,"totalSalary":7425,"status":"Active","source":"MD"},{"employeeNo":22408,"nameAr":"محمد سعيد سليمان دنبغ","name":"Mohammed Saeed Sulaiman Dunbugh","hireDate":"2020-01-12","terminationDate":"","jobAr":"مدير شريك أعمال الموارد البشرية","job":"HR Business Partner Manager","department":"Human Capital","section":"HC Business Partner","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"محمد خليل ابراهيم مكاوي","manager":"Mohammed Khalil Ibrahim Makkawi","nationality":"Saudi","gender":"Male","mobile":547070982,"email":"mdhunbugh@alesayi-motors.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":13333,"housing":3334,"transport":1333,"totalSalary":18150,"status":"Active","source":"MD"},{"employeeNo":22870,"nameAr":"هشام محمد باقازي","name":"Hesham Mohammad Bakazi","hireDate":"2023-10-01","terminationDate":"","jobAr":"شريك أعمال الموارد البشرية","job":"HR Business Partner","department":"Human Capital","section":"HC Business Partner","branch":"Khorais Branch","city":"RIYADH","managerAr":"محمد سعيد سليمان دنبغ","manager":"Mohammed Saeed Sulaiman Dunbugh","nationality":"Saudi","gender":"Male","mobile":568356738,"email":"hbakazi@alesayi-motors.com","classification":"Non Productive Staff","region":"Central Region","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":10500,"housing":2625,"transport":1050,"totalSalary":14325,"status":"Active","source":"MD"},{"employeeNo":22609,"nameAr":"ساره عبدالعزيز صالح المبيريك","name":"Sarah Abdulaziz Saleh Almubayrik","hireDate":"2021-10-17","terminationDate":"","jobAr":"اخصائي موارد بشرية","job":"HR Specialist","department":"Human Capital","section":"HC Business Partner","branch":"Khorais Branch","city":"RIYADH","managerAr":"هشام محمد باقازي","manager":"Hesham Mohammad Bakazi","nationality":"Saudi","gender":"Female","mobile":501995665,"email":"salmubayrik@alesayi-motors.com","classification":"Non Productive Staff","region":"Central Region","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":7000,"housing":1750,"transport":700,"totalSalary":9450,"status":"Active","source":"MD"},{"employeeNo":22067,"nameAr":"عساف نسيم احمد الفرحان","name":"Assaf Nasim Ahmed Alfarhan","hireDate":"2018-03-15","terminationDate":"","jobAr":"اخصائي موارد بشرية","job":"HR Specialist","department":"Human Capital","section":"HC Business Partner","branch":"Dammam Branch","city":"DAMMAM","managerAr":"محمد سعيد سليمان دنبغ","manager":"Mohammed Saeed Sulaiman Dunbugh","nationality":"Saudi","gender":"Male","mobile":536864025,"email":"amfarhan@alesayi-motors.com","classification":"Non Productive Staff","region":"Eastern Region","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":7000,"housing":1750,"transport":700,"totalSalary":9850,"status":"Active","source":"MD"},{"employeeNo":23081,"nameAr":"غدي ابراهيم مغلي العصلاني","name":"Ghadi Ibrahim Alaslani","hireDate":"2025-02-12","terminationDate":"","jobAr":"اخصائي موارد بشرية","job":"HR Specialist","department":"Human Capital","section":"HC Business Partner","branch":"Dammam Branch","city":"DAMMAM","managerAr":"محمد سعيد سليمان دنبغ","manager":"Mohammed Saeed Sulaiman Dunbugh","nationality":"Saudi","gender":"Female","mobile":509515828,"email":"ghadiim4.alaslani@gmail.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":4500,"housing":1125,"transport":450,"totalSalary":6075,"status":"Active","source":"MD"},{"employeeNo":22133,"nameAr":"منصور احمد عبداللطيف الجحدلي","name":"Mansoor Ahmed Abdulatif Aljahdali","hireDate":"2018-07-01","terminationDate":"","jobAr":"مدير التطوير التنظيمي","job":"Organization Development Manager","department":"Human Capital","section":"HC Organization Development","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"محمد خليل ابراهيم مكاوي","manager":"Mohammed Khalil Ibrahim Makkawi","nationality":"Saudi","gender":"Male","mobile":566665803,"email":"maljahdali@alesayi-motors.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":13333,"housing":3334,"transport":1333,"totalSalary":18150,"status":"Active","source":"MD"},{"employeeNo":22559,"nameAr":"نور محمد حسن الفارسي","name":"Noor Mohammed Hassan Alfarsi","hireDate":"2021-09-01","terminationDate":"","jobAr":"اخصائي موارد بشرية","job":"HR Specialist","department":"Human Capital","section":"HC Organization Development","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"منصور احمد عبداللطيف الجحدلي","manager":"Mansoor Ahmed Abdulatif Aljahdali","nationality":"Saudi","gender":"Female","mobile":564234606,"email":"n-2999@hotmail.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":5500,"housing":1375,"transport":550,"totalSalary":7425,"status":"Active","source":"MD"},{"employeeNo":22537,"nameAr":"يوسف محمد حسن خياط","name":"Yousef Mohammed Hassan Khaiyat","hireDate":"2021-05-17","terminationDate":"","jobAr":"مسؤول تدريب","job":"Training Officer","department":"Human Capital","section":"HC Organization Development","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"منصور احمد عبداللطيف الجحدلي","manager":"Mansoor Ahmed Abdulatif Aljahdali","nationality":"Saudi","gender":"Male","mobile":506514055,"email":"ykhaiyat@alesayi-motors.com","classification":"Non Productive Staff","region":"Western Region","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":6000,"housing":1500,"transport":600,"totalSalary":8650,"status":"Active","source":"MD"},{"employeeNo":23092,"nameAr":"بهجت نايل ياسين ملا","name":"Bahjat Naiel Yassien Mulla","hireDate":"2025-04-20","terminationDate":"","jobAr":"مدير استقطاب المواهب","job":"Talent Acquisition Manager","department":"Human Capital","section":"Talant Acquisition","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"محمد خليل ابراهيم مكاوي","manager":"Mohammed Khalil Ibrahim Makkawi","nationality":"Saudi","gender":"Male","mobile":566544848,"email":"bmulla@alesayi-motors.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":19000,"housing":4750,"transport":1900,"totalSalary":25800,"status":"Active","source":"MD"},{"employeeNo":22702,"nameAr":"عبدالرحمن ياسين عمر شعبان","name":"Abdulrahman Yasin Omer Shaaban","hireDate":"2022-08-04","terminationDate":"","jobAr":"مشرف استقطاب المواهب","job":"Talent Acquisition Supervisor","department":"Human Capital","section":"Talant Acquisition","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"بهجت نايل ياسين ملا","manager":"Bahjat Naiel Yassien Mulla","nationality":"Saudi","gender":"Male","mobile":567774027,"email":"ashaaban@alesayi-motors.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":9000,"housing":2250,"transport":900,"totalSalary":12300,"status":"Active","source":"MD"},{"employeeNo":23113,"nameAr":"احمد خالد مبارك السفري","name":"Ahmed Khaled Mubarak Alsefri","hireDate":"2025-07-01","terminationDate":"","jobAr":"أخصائي استقطاب المواهب","job":"Talent Acquisition Specialist","department":"Human Capital","section":"Talant Acquisition","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"عبدالرحمن ياسين عمر شعبان","manager":"Abdulrahman Yasin Omer Shaaban","nationality":"Saudi","gender":"Male","mobile":564936643,"email":"aalsefri@alesayi-motors.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":7500,"housing":1875,"transport":750,"totalSalary":10275,"status":"Active","source":"MD"},{"employeeNo":22878,"nameAr":"ميساء حسين سلطان الصبحي","name":"Maisa Hussain Sultan Alsubhi","hireDate":"2023-10-15","terminationDate":"2026-10-13","jobAr":"أخصائي استقطاب المواهب","job":"Talent Acquisition Specialist","department":"Human Capital","section":"Talant Acquisition","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"بهجت نايل ياسين ملا","manager":"Bahjat Naiel Yassien Mulla","nationality":"Saudi","gender":"Female","mobile":502696849,"email":"malsubhi@alesayi-motors.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"إقالة / إنهاء خدمات","terminationClass":"مادة 74","terminationReason":"انتهاء العقد - عدم التجديد برغبة صاحب العمل","insuranceType":"تأمينات - سعودي","basicSalary":5500,"housing":1375,"transport":550,"totalSalary":7575,"status":"Active","source":"MD"},{"employeeNo":22677,"nameAr":"غيداء عثمان احمد بامردوف","name":"Ghaida Othman Ahmed Bamrdouf","hireDate":"2022-05-08","terminationDate":"","jobAr":"مسؤول استقطاب المواهب","job":"Talent Acquisition Officer","department":"Human Capital","section":"Talant Acquisition","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"عبدالرحمن ياسين عمر شعبان","manager":"Abdulrahman Yasin Omer Shaaban","nationality":"Saudi","gender":"Female","mobile":568670670,"email":"gbamrdouf@alesayi-motors.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":5500,"housing":1375,"transport":550,"totalSalary":7425,"status":"Active","source":"MD"},{"employeeNo":22935,"nameAr":"مهند اسحق موسى الحواري","name":"Muhannad Ishaq Mousa Alhawari","hireDate":"2024-03-10","terminationDate":"2026-12-31","jobAr":"مدير التدريب الاقليمي","job":"National Training Manager","department":"Human Capital","section":"Training","branch":"Kilo 11 Branch","city":"JEDDAH","managerAr":"منصور احمد عبداللطيف الجحدلي","manager":"Mansoor Ahmed Abdulatif Aljahdali","nationality":"Jordan","gender":"Male","mobile":596343317,"email":"malhawari@alesayi-motors.com","classification":"Non Productive Staff","region":"Western Region","terminationType":"إقالة / إنهاء خدمات","terminationClass":"مادة 74","terminationReason":"محال للتقاعد","insuranceType":"تأمينات - غير سعودي","basicSalary":20000,"housing":5000,"transport":2000,"totalSalary":27000,"status":"Active","source":"MD"},{"employeeNo":23000,"nameAr":"مارك جوزيف تيلمو روديل","name":"Marc Joseph Telmo Rodil","hireDate":"2024-08-06","terminationDate":"","jobAr":"قائد فريق التدريب الفني","job":"Technical Training Team Leader","department":"Human Capital","section":"Training","branch":"Kilo 11 Branch","city":"JEDDAH","managerAr":"مهند اسحق موسى الحواري","manager":"Muhannad Ishaq Mousa Alhawari","nationality":"Philipines","gender":"Male","mobile":561347381,"email":"marcrodil.tca@gmail.com","classification":"Non Productive Staff","region":"Western Region","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - غير سعودي","basicSalary":7000,"housing":1750,"transport":700,"totalSalary":9450,"status":"Active","source":"MD"},{"employeeNo":22585,"nameAr":"واج الدين شيخ سجرالدين","name":"Wajudden Shaikh Sajaruddin","hireDate":"2021-09-21","terminationDate":"","jobAr":"أخصائي تدريب دهانات","job":"Paint Training Instructor","department":"Human Capital","section":"Training","branch":"Kilo 11 Branch","city":"JEDDAH","managerAr":"مهند اسحق موسى الحواري","manager":"Muhannad Ishaq Mousa Alhawari","nationality":"India","gender":"Male","mobile":595029890,"email":"wshaikh@alesayi-motors.com","classification":"Non Productive Staff","region":"Western Region","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - غير سعودي","basicSalary":5000,"housing":1250,"transport":500,"totalSalary":6750,"status":"Active","source":"MD"},{"employeeNo":22973,"nameAr":"محسن اسماعيل احمد اكمو","name":"Mohssine Ismail Ahmed Aguemmou","hireDate":"2024-07-01","terminationDate":"","jobAr":"مدرب المبيعات والتسويق","job":"Sales & Marketing Training Facilitator","department":"Human Capital","section":"Training","branch":"Kilo 11 Branch","city":"JEDDAH","managerAr":"مهند اسحق موسى الحواري","manager":"Muhannad Ishaq Mousa Alhawari","nationality":"Moroccan","gender":"Male","mobile":541353504,"email":"maguemmou@alesayi-motors.com","classification":"Non Productive Staff","region":"Western Region","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - غير سعودي","basicSalary":10000,"housing":2500,"transport":1000,"totalSalary":13500,"status":"Active","source":"MD"},{"employeeNo":22974,"nameAr":"محمد عبدالغني عبدالفتاح علي","name":"Mohamed Abdelghani Abdelfattah Ali","hireDate":"2024-07-01","terminationDate":"","jobAr":"مدرب المهارات المهنية","job":"soft skills training facilitator","department":"Human Capital","section":"Training","branch":"Kilo 11 Branch","city":"JEDDAH","managerAr":"مهند اسحق موسى الحواري","manager":"Muhannad Ishaq Mousa Alhawari","nationality":"Egypt","gender":"Male","mobile":545813141,"email":"mohamed.ali.14197@gmail.com","classification":"Non Productive Staff","region":"Western Region","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - غير سعودي","basicSalary":10000,"housing":2500,"transport":1000,"totalSalary":13500,"status":"Active","source":"MD"},{"employeeNo":23209,"nameAr":"ايوجين كالسدان - سنسجون","name":"EUGENE CALICDAN - SINGSON","hireDate":"2025-11-18","terminationDate":"","jobAr":"قائد فريق التدريب الفني","job":"Technical Training Team Leader","department":"Human Capital","section":"Training","branch":"Kilo 11 Branch","city":"JEDDAH","managerAr":"مهند اسحق موسى الحواري","manager":"Muhannad Ishaq Mousa Alhawari","nationality":"Philipines","gender":"Male","mobile":557770454,"email":"eugenesingson@gmail.com","classification":"Non Productive Staff","region":"Western Region","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - غير سعودي","basicSalary":7000,"housing":1750,"transport":700,"totalSalary":9450,"status":"Active","source":"MD"},{"employeeNo":23086,"nameAr":"احمد محمد الشمراني","name":"Ahmed Mohammed Alshamrani","hireDate":"2025-03-04","terminationDate":"","jobAr":"منسق تدريب","job":"Training Coordinator","department":"Human Capital","section":"Training","branch":"Kilo 11 Branch","city":"JEDDAH","managerAr":"مهند اسحق موسى الحواري","manager":"Muhannad Ishaq Mousa Alhawari","nationality":"Saudi","gender":"Male","mobile":558275373,"email":"jaz.ahmed360@icloud.com","classification":"Non Productive Staff","region":"Western Region","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي (النظام الجديد)","basicSalary":7000,"housing":1750,"transport":700,"totalSalary":9450,"status":"Active","source":"MD"}];
+
+function classifySection(raw){
+  const t = String(raw||'').trim().toLowerCase();
+  if(!t) return null;
+  if(SECTION_PATTERNS[t]) return SECTION_PATTERNS[t];
+  for(const pat in SECTION_PATTERNS){ if(t.includes(pat)) return SECTION_PATTERNS[pat]; }
+  return null;
+}
+function withSectionKey(arr){ return arr.map(r=>Object.assign({}, r, {sectionKey: classifySection(r.section)})); }
+
+const DEFAULT_ROWS = withSectionKey(DEFAULT_ROWS_RAW);
+
+let adminAuthenticated = sessionStorage.getItem('hcc_admin_auth') === '1';
+let rows = DEFAULT_ROWS;
+let lastUpdate = null;
+let currentSection = 'all';
+let charts = {};
+
+const arMap = {
+  employeeNo:['الرقم الوظيفي','Employee No','Employee ID'], nameAr:['اسم الموظف - عربي'], name:['اسم الموظف - انجليزي','Employee Name'],
+  hireDate:['تاريخ التعيين'], terminationDate:['تاريخ الإنهاء'], birthDate:['تاريخ الولادة'],
+  jobAr:['المسمى الوظيفي - عربي'], job:['المسمى الوظيفي - انجليزي'], department:['الادارة - انجليزي'], section:['القسم - انجليزي'], subsection:['القسم الفرعي - انجليزي'],
+  branch:['الفرع - انجليزي'], city:['الموقع - انجليزي'], manager:['اسم المدير - انجليزي'], managerAr:['اسم المدير - عربي'],
+  nationality:['الجنسية - انجليزي'], gender:['الجنس - انجليزي'], mobile:['هاتف نقال'], email:['البريد الإلكتروني'],
+  classification:['التصنيف 1 - انجليزي'], region:['التصنيف 2 - انجليزي'],
+  terminationType:['نوع الإنهاء - عربي'], terminationClass:['تصنيف الانهاء - عربي'], terminationReason:['سبب الإنهاء - عربي'],
+  basicSalary:['الراتب الأساسي'], housing:['بدل السكن'], transport:['بدل المواصلات'], totalSalary:['إجمالي الراتب']
+};
+
+function fmt(n){return (Number(n)||0).toLocaleString('en-US');}
+function pct(a,b){return b?Math.round(a/b*100)+'%':'0%';}
+function val(x){return x===undefined||x===null?'':x;}
+function num(x){return Number(String(x||0).replace(/,/g,''))||0;}
+function isSaudi(x){return String(x.nationality||'').trim().toLowerCase()==='saudi';}
+function sum(data,key){return data.reduce((a,b)=>a+num(b[key]),0);}
+function group(data,key,limit=12){let o={}; data.forEach(r=>{let v=val(r[key])||'غير محدد'; o[v]=(o[v]||0)+1;}); return Object.fromEntries(Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,limit));}
+function excelDate(v){if(!v)return ''; if(typeof v==='number'&&v>20000&&v<60000){let d=new Date((v-25569)*86400*1000); return d.toISOString().slice(0,10);} if(v instanceof Date&&!isNaN(v)) return v.toISOString().slice(0,10); return String(v).slice(0,10);}
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function pick(r,keys){for(const k of keys){if(r[k]!==undefined && r[k]!==null && r[k]!=='') return r[k];} return '';}
+
+// ---------- Sidebar / navigation ----------
+function buildSectionNav(){
+  const box = document.getElementById('sectionNav');
+  box.innerHTML = TARGET_SECTIONS.map(s=>{
+    const cnt = s.key==='all' ? matchedRows(rows).filter(r=>r.status==='Active').length : rows.filter(r=>r.sectionKey===s.key && r.status==='Active').length;
+    return `<button class="section-btn" data-section="${s.key}" onclick="selectSection('${s.key}')"><span>${s.label}</span><span class="cnt">${fmt(cnt)}</span></button>`;
+  }).join('');
+  updateSectionNavActive();
+}
+function updateSectionNavActive(){
+  document.querySelectorAll('#sectionNav .section-btn').forEach(b=>b.classList.toggle('active', b.dataset.section===currentSection));
+}
+function selectSection(key){
+  currentSection = key;
+  updateSectionNavActive();
+  showPage('dashboard');
+  renderAll();
+}
+function showPage(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav button[data-page]').forEach(b=>b.classList.toggle('active', b.dataset.page===id));
+  if(id==='admin') renderAdminLock();
+}
+
+// ---------- Data helpers ----------
+function matchedRows(data){ return data.filter(r=>r.sectionKey); }
+function sectionScope(data){ return currentSection==='all' ? matchedRows(data) : data.filter(r=>r.sectionKey===currentSection); }
+function activeRows(data){ return data.filter(r=>r.status==='Active'); }
+function filteredRows(){
+  let data = sectionScope(rows);
+  const statusMode = document.getElementById('fStatus').value;
+  if(statusMode==='active') data = activeRows(data);
+  const s = document.getElementById('fSearch').value.toLowerCase();
+  if(s) data = data.filter(r=>String((r.name||'')+' '+(r.nameAr||'')+' '+(r.employeeNo||'')+' '+(r.job||'')+' '+(r.jobAr||'')).toLowerCase().includes(s));
+  return data;
+}
+function sectionLabel(key){ const s=TARGET_SECTIONS.find(x=>x.key===key); return s?s.label:key; }
+
+// ---------- Chart / table rendering ----------
+function chart(id,type,obj,label='عدد'){
+  const ctx = document.getElementById(id);
+  const wrap = ctx.parentElement;
+  let emptyMsg = wrap.querySelector('.chart-empty-msg');
+  const hasData = obj && Object.keys(obj).length > 0;
+  if(charts[id]){ charts[id].destroy(); charts[id] = null; }
+  if(typeof Chart === 'undefined'){
+    ctx.style.display = 'none';
+    if(!emptyMsg){ emptyMsg = document.createElement('div'); emptyMsg.className = 'chart-empty-msg muted'; wrap.appendChild(emptyMsg); }
+    emptyMsg.textContent = '⚠️ تعذّر تحميل مكتبة الرسوم البيانية (Chart.js) — تأكد من اتصال الإنترنت وأعد تحميل الصفحة.';
+    return;
+  }
+  if(!hasData){
+    ctx.style.display = 'none';
+    if(!emptyMsg){ emptyMsg = document.createElement('div'); emptyMsg.className = 'chart-empty-msg muted'; wrap.appendChild(emptyMsg); }
+    emptyMsg.textContent = 'لا توجد بيانات لعرضها ضمن هذا الفلتر.';
+    return;
+  }
+  if(emptyMsg) emptyMsg.remove();
+  ctx.style.display = '';
+  charts[id] = new Chart(ctx,{type, data:{labels:Object.keys(obj), datasets:[{label, data:Object.values(obj), borderWidth:1}]},
+    options:{responsive:true, plugins:{legend:{display:type==='doughnut'||type==='pie', position:'bottom'}}, scales:(type==='doughnut'||type==='pie')?{}:{y:{beginAtZero:true, ticks:{precision:0, stepSize: Math.max(1, Math.ceil(Math.max(...Object.values(obj),1)/8))}}}}});
+}
+function table(el, cols, data){
+  el.innerHTML = '<thead><tr>'+cols.map(c=>`<th>${c[1]}</th>`).join('')+'</tr></thead><tbody>'+
+    data.map(r=>'<tr>'+cols.map(c=>`<td>${formatCell(c[0], r[c[0]], r)}</td>`).join('')+'</tr>').join('')+'</tbody>';
+}
+function formatCell(k,v,row){
+  if(k==='status'){
+    if(v==='Active'){
+      return (row && row.terminationReason) ? `<span class="pill amber">${row.terminationReason}</span>` : '<span class="pill green">نشط</span>';
+    }
+    return '<span class="pill red">غادر</span>';
+  }
+  if(k==='sectionKey') return sectionLabel(v);
+  if(k==='totalSalary') return fmt(v);
+  return val(v);
+}
+function missingFields(r){
+  const missing = [];
+  if(!r.email) missing.push('البريد الإلكتروني');
+  if(!r.mobile) missing.push('رقم الجوال');
+  if(!num(r.totalSalary)) missing.push('الراتب');
+  return missing;
+}
+let missingDataVisible = false;
+function toggleMissingDetails(){
+  missingDataVisible = !missingDataVisible;
+  document.getElementById('missingDataCard').style.display = missingDataVisible ? '' : 'none';
+}
+function renderMissingData(activeAct){
+  const withMissing = activeAct.filter(r=>missingFields(r).length>0);
+  document.getElementById('missingDataTable').innerHTML =
+    '<thead><tr><th>الرقم</th><th>الاسم</th><th>القسم</th><th>المسمى الوظيفي</th><th>الجوال</th><th>البريد الإلكتروني</th><th>الراتب</th><th>البيانات الناقصة</th></tr></thead><tbody>'+
+    withMissing.map(r=>'<tr><td>'+val(r.employeeNo)+'</td><td>'+val(r.name)+'</td><td>'+sectionLabel(r.sectionKey)+'</td><td>'+val(r.job)+'</td><td>'+val(r.mobile)+'</td><td>'+val(r.email)+'</td><td>'+fmt(r.totalSalary)+'</td><td>'+
+      missingFields(r).map(m=>'<span class="pill amber">'+m+'</span>').join(' ')+'</td></tr>').join('');
+  return withMissing.length;
+}
+function statusBreakdown(activeAct){
+  const trueActive = activeAct.filter(r=>!r.terminationReason);
+  const pending = activeAct.filter(r=>r.terminationReason);
+  const byReason = {};
+  pending.forEach(r=>{
+    const key = r.terminationReason || 'غير محدد';
+    byReason[key] = (byReason[key]||0) + 1;
+  });
+  const rowsHtml = ['<div class="metric-line"><span>نشط فعلي (بدون أي إشعار مغادرة)</span><b>'+fmt(trueActive.length)+'</b></div>']
+    .concat(Object.entries(byReason).sort((a,b)=>b[1]-a[1]).map(([reason,count])=>
+      '<div class="metric-line"><span>'+reason+' <span class="muted">(نشط حالياً — بانتظار تاريخ الإنهاء)</span></span><b>'+fmt(count)+'</b></div>'
+    ));
+  return {html: rowsHtml.join(''), total: activeAct.length, pendingCount: pending.length};
+}
+
+function renderAll(){
+  buildSectionNav();
+  const secName = sectionLabel(currentSection);
+  document.getElementById('dashTitle').textContent = secName;
+  document.getElementById('dashSubtitle').textContent = currentSection==='all'
+    ? 'نظرة عامة على جميع الأقسام المحددة ضمن رأس المال البشري'
+    : 'بيانات قسم ' + secName;
+
+  const statusWrap = document.getElementById('statusFilterWrap');
+  const fStatus = document.getElementById('fStatus');
+  if(currentSection==='all'){
+    statusWrap.style.display = 'none';
+    fStatus.value = 'active';
+  }else{
+    statusWrap.style.display = '';
+  }
+
+  const act = filteredRows();
+  const activeAct = act.filter(r=>r.status==='Active');
+  const saud = activeAct.filter(isSaudi).length;
+  const payroll = sum(activeAct,'totalSalary');
+  const avg = activeAct.length ? payroll/activeAct.length : 0;
+  const missing = renderMissingData(activeAct);
+  const scopeAllActive = activeRows(sectionScope(rows));
+  const scopeEOS = sectionScope(rows).filter(r=>r.status==='Terminated');
+
+  document.getElementById('kActive').textContent = fmt(activeAct.length);
+  document.getElementById('kSaud').textContent = pct(saud, activeAct.length);
+  document.getElementById('kPayroll').textContent = fmt(Math.round(payroll));
+  document.getElementById('kAvg').textContent = fmt(Math.round(avg));
+
+  const bd = statusBreakdown(activeAct);
+  document.getElementById('statusBreakdown').innerHTML = bd.html;
+  document.getElementById('statusBreakdownTotal').textContent = 'إجمالي "النشطين" المعروض أعلاه: ' + fmt(bd.total) + (bd.pendingCount ? ' — منهم ' + fmt(bd.pendingCount) + ' عندهم إشعار مغادرة' : '');
+
+  document.getElementById('saudAlert').textContent = 'نسبة السعودة: ' + pct(saud, activeAct.length);
+  document.getElementById('turnAlert').textContent = 'مؤشر الدوران: ' + pct(scopeEOS.length, scopeAllActive.length + scopeEOS.length);
+  document.getElementById('dataAlert').textContent = 'نواقص بيانات: ' + fmt(missing) + ' — اضغط للتفاصيل';
+
+  document.getElementById('chartATitle').textContent = currentSection==='all' ? 'عدد الموظفين حسب القسم' : 'عدد الموظفين حسب المسمى الوظيفي';
+  try{
+    if(currentSection==='all'){
+      const bySection = {};
+      TARGET_SECTIONS.filter(s=>s.key!=='all').forEach(s=>{ bySection[s.label] = rows.filter(r=>r.sectionKey===s.key && r.status==='Active').length; });
+      chart('chartA','bar',bySection);
+    }else{
+      chart('chartA','bar', group(activeAct,'job',10));
+    }
+    chart('chartB','doughnut', {'سعودي':saud, 'غير سعودي': activeAct.length - saud});
+  }catch(e){
+    console.error('chart render error:', e);
+  }
+
+  const sortedAct = act.slice().sort((a,b)=>num(b.totalSalary)-num(a.totalSalary));
+  table(document.getElementById('empTable'),
+    [['employeeNo','الرقم'],['name','الاسم'],['sectionKey','القسم'],['job','المسمى الوظيفي'],['nationality','الجنسية'],['mobile','الجوال'],['email','البريد الإلكتروني'],['totalSalary','الراتب'],['status','الحالة']],
+    sortedAct.slice(0,300));
+}
+
+// ---------- Shared cloud storage (Firebase Realtime Database — syncs across every device that opens this link) ----------
+const STORE_ROWS_KEY = 'hcc_rows';
+const STORE_UPDATE_KEY = 'hcc_last_update';
+
+// Wait (up to ~4s) for the Firebase module script above to finish initializing.
+function waitForFirebase(){
+  if(window.firebaseStorage) return Promise.resolve(true);
+  return new Promise(resolve=>{
+    let done = false;
+    window.addEventListener('firebase-ready', ()=>{ if(!done){ done = true; resolve(true); } }, {once:true});
+    setTimeout(()=>{ if(!done){ done = true; resolve(!!window.firebaseStorage); } }, 4000);
+  });
+}
+async function hasCloudStorage(){
+  await waitForFirebase();
+  return typeof window!=='undefined' && window.firebaseStorage && typeof window.firebaseStorage.get==='function';
+}
+async function cloudGet(key){
+  if(!(await hasCloudStorage())) return null;
+  try{ const v = await window.firebaseStorage.get(key); return (v===null||v===undefined) ? null : v; }catch(e){ return null; }
+}
+async function cloudSet(key, value){
+  if(!(await hasCloudStorage())) return false;
+  try{ return await window.firebaseStorage.set(key, value); }catch(e){ return false; }
+}
+async function cloudDelete(key){
+  if(!(await hasCloudStorage())) return false;
+  try{ return await window.firebaseStorage.delete(key); }catch(e){ return false; }
+}
+async function loadCloudData(){
+  const rawRows = await cloudGet(STORE_ROWS_KEY);
+  const rawUpdate = await cloudGet(STORE_UPDATE_KEY);
+  if(rawRows){ try{ rows = withSectionKey(JSON.parse(rawRows)); }catch(e){ rows = DEFAULT_ROWS; } }
+  if(rawUpdate){ try{ lastUpdate = JSON.parse(rawUpdate); }catch(e){ lastUpdate = null; } }
+}
+
+// ---------- Admin / upload ----------
+function renderAdminLock(){
+  const login = document.getElementById('adminLogin'), content = document.getElementById('adminContent');
+  login.classList.toggle('hide', adminAuthenticated);
+  content.classList.toggle('locked', !adminAuthenticated);
+}
+function unlockAdmin(){
+  const pass = document.getElementById('adminPass'), err = document.getElementById('adminError');
+  if(pass && pass.value === ADMIN_PASSWORD){ adminAuthenticated = true; sessionStorage.setItem('hcc_admin_auth','1'); err.classList.add('hide'); renderAdminLock(); }
+  else { err.classList.remove('hide'); }
+}
+function lockAdmin(){ adminAuthenticated = false; sessionStorage.removeItem('hcc_admin_auth'); document.getElementById('adminPass').value=''; renderAdminLock(); }
+async function resetDefault(){
+  const box = document.getElementById('uploadResult');
+  box.textContent = 'جاري الاستعادة...';
+  await cloudDelete(STORE_ROWS_KEY);
+  await cloudDelete(STORE_UPDATE_KEY);
+  rows = DEFAULT_ROWS; lastUpdate = null;
+  box.innerHTML = '<b>تمت استعادة البيانات الافتراضية على كل الأجهزة.</b>';
+  renderAll();
+}
+function isSjahiStudent(o){
+  return /sjahi/i.test(o.job||'') || /sjahi/i.test(o.jobAr||'');
+}
+function normalizeSheet(arr){
+  return arr.map(r=>{
+    let o = {};
+    for(const [k,keys] of Object.entries(arMap)) o[k] = pick(r,keys);
+    ['hireDate','terminationDate','birthDate'].forEach(k=>o[k]=excelDate(o[k]));
+    o.status = (o.terminationDate && o.terminationDate <= todayISO()) ? 'Terminated' : 'Active';
+    o.sectionKey = isSjahiStudent(o) ? null : classifySection(o.section);
+    return o;
+  });
+}
+function looksLikeEmployeeSheet(sampleRow){
+  const keys = Object.keys(sampleRow||{});
+  return keys.some(k=>String(k).includes('الرقم الوظيفي') || /employee\s*(no|id)/i.test(k));
+}
+// يمنع تكرار نفس الموظف لو تكرر صفّه داخل نفس الشيت أو ظهر في أكثر من شيت داخل الملف.
+// يُبقي على آخر ظهور له في الملف (يُعتبر الأحدث)، عشان ما تتضاعف الرواتب والعدادات.
+function dedupeByEmployeeNo(arr){
+  const map = new Map();
+  let noIdCounter = 0;
+  arr.forEach(r=>{
+    const key = String(r.employeeNo||'').trim();
+    map.set(key ? key : '__noid_'+(noIdCounter++), r);
+  });
+  return {rows: Array.from(map.values()), duplicates: arr.length - map.size};
+}
+function readUpload(file){
+  if(!adminAuthenticated){ alert('رفع البيانات متاح فقط بعد إدخال الرقم السري في صفحة الأدمن.'); return; }
+  if(!file) return;
+  const resultBox = document.getElementById('uploadResult');
+  resultBox.textContent = 'جاري قراءة الملف...';
+  const reader = new FileReader();
+  reader.onload = async e=>{
+    try{
+      const wb = XLSX.read(e.target.result, {type:'array', cellDates:true});
+      let allRows = [];
+      wb.SheetNames.forEach(name=>{
+        const ws = wb.Sheets[name];
+        const json = XLSX.utils.sheet_to_json(ws, {defval:''});
+        if(json.length && looksLikeEmployeeSheet(json[0])){
+          allRows = allRows.concat(normalizeSheet(json));
+        }
+      });
+      const deduped = dedupeByEmployeeNo(allRows);
+      await processUploadedRows(deduped.rows, file.name, deduped.duplicates);
+    }catch(err){
+      resultBox.textContent = 'حدث خطأ أثناء قراءة الملف: ' + err.message;
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+function computeDiff(oldRows, newRows){
+  const oldIds = new Set(oldRows.map(r=>String(r.employeeNo)));
+  const newIds = new Set(newRows.map(r=>String(r.employeeNo)));
+  const oldById = {}; oldRows.forEach(r=>oldById[String(r.employeeNo)] = r);
+  const joiners = newRows.filter(r=>!oldIds.has(String(r.employeeNo)));
+  const leaversMissing = oldRows.filter(r=>!newIds.has(String(r.employeeNo)));
+  const leaversTerminated = newRows.filter(r=>{
+    const id = String(r.employeeNo);
+    if(!oldIds.has(id)) return false;
+    const old = oldById[id];
+    return r.status==='Terminated' && old.status!=='Terminated';
+  });
+  return {joiners, leavers: leaversMissing.concat(leaversTerminated)};
+}
+async function processUploadedRows(allRows, fileName, duplicatesRemoved){
+  const resultBox = document.getElementById('uploadResult');
+  const matched = matchedRows(allRows);
+  const studentsExcluded = allRows.filter(isSjahiStudent).length;
+  if(!matched.length){
+    resultBox.innerHTML = 'تمت قراءة <b>'+fmt(allRows.length)+'</b> سجل، لكن لم يتم العثور على أي موظف ضمن الأقسام الستة المحددة داخل هذا الملف.';
+    return;
+  }
+  const diff = computeDiff(rows, matched);
+  rows = matched;
+  lastUpdate = {at: new Date().toISOString(), fileName, totalScanned: allRows.length, totalMatched: matched.length, joiners: diff.joiners, leavers: diff.leavers};
+
+  resultBox.textContent = 'جاري الحفظ ومزامنة البيانات مع كل الأجهزة...';
+  const savedRows = await cloudSet(STORE_ROWS_KEY, JSON.stringify(rows));
+  const savedUpdate = await cloudSet(STORE_UPDATE_KEY, JSON.stringify(lastUpdate));
+  const syncNote = (savedRows && savedUpdate)
+    ? 'تمت المزامنة — أي جهاز يفتح الرابط ويعمل تحديث للصفحة سيشوف هذه البيانات.'
+    : 'تنبيه: تعذّرت مزامنة البيانات مع الأجهزة الأخرى (التخزين السحابي غير متاح في هذا السياق)؛ البيانات محفوظة على هذا الجهاز فقط.';
+
+  resultBox.innerHTML = 'تم تحميل <b>'+fmt(matched.length)+'</b> سجل ضمن الأقسام المحددة من أصل <b>'+fmt(allRows.length)+'</b> سجل تمت قراءته من الملف.<br>'
+    + (duplicatesRemoved ? '⚠️ تم اكتشاف <b>'+fmt(duplicatesRemoved)+'</b> صف مكرر لنفس الرقم الوظيفي (بسبب تكرار داخل الملف أو تكرر الموظف في أكثر من شيت) — تم استبعاد التكرار تلقائياً والإبقاء على آخر ظهور له فقط.<br>' : '')
+    + (studentsExcluded ? 'تم استثناء <b>'+fmt(studentsExcluded)+'</b> من طلاب SJAHI تلقائياً (مو موظفين).<br>' : '')
+    + 'الانضمامات: <b>'+fmt(diff.joiners.length)+'</b> — المغادرات: <b>'+fmt(diff.leavers.length)+'</b><br>'
+    + '<span class="muted">'+syncNote+'</span>';
+  currentSection = 'all';
+  renderAll();
+  showPage('dashboard');
+}
+
+// ---------- Auth gate (Firebase Authentication) ----------
+function waitForAuthBridge(){
+  if(window.firebaseAuthBridge) return Promise.resolve(true);
+  return new Promise(resolve=>{
+    let done = false;
+    window.addEventListener('firebase-ready', ()=>{ if(!done){ done = true; resolve(true); } }, {once:true});
+    setTimeout(()=>{ if(!done){ done = true; resolve(!!window.firebaseAuthBridge); } }, 4000);
+  });
+}
+async function doSignIn(){
+  const email = document.getElementById('authEmail').value.trim();
+  const pass = document.getElementById('authPassword').value;
+  const btn = document.getElementById('authSubmitBtn');
+  const err = document.getElementById('authError');
+  err.classList.add('hide');
+  if(!email || !pass){ err.textContent = 'الرجاء إدخال البريد الإلكتروني وكلمة المرور.'; err.classList.remove('hide'); return; }
+  btn.disabled = true; btn.textContent = 'جاري الدخول...';
+  const res = await window.firebaseAuthBridge.signIn(email, pass);
+  btn.disabled = false; btn.textContent = 'دخول';
+  if(!res.ok){
+    const msgs = {
+      'auth/invalid-credential':'البريد الإلكتروني أو كلمة المرور غير صحيحة.',
+      'auth/invalid-email':'صيغة البريد الإلكتروني غير صحيحة.',
+      'auth/user-disabled':'هذا الحساب معطّل.',
+      'auth/too-many-requests':'محاولات كثيرة فاشلة — حاول لاحقاً.'
+    };
+    err.textContent = msgs[res.code] || ('تعذّر تسجيل الدخول (' + res.code + ').');
+    err.classList.remove('hide');
+  }
+  // على النجاح، onAuthStateChanged بيتكفل بعرض التطبيق تلقائياً.
+}
+async function doSignOut(){
+  if(window.firebaseAuthBridge) await window.firebaseAuthBridge.signOut();
+}
+function showApp(user){
+  document.getElementById('authGate').style.display = 'none';
+  document.getElementById('appRoot').classList.remove('gated');
+  const label = document.getElementById('authUserLabel');
+  if(label) label.textContent = user && user.email ? ('مسجّل الدخول: ' + user.email) : '';
+}
+function showLoginForm(){
+  document.getElementById('authGate').style.display = 'grid';
+  document.getElementById('appRoot').classList.add('gated');
+  document.getElementById('authChecking').classList.add('hide');
+  document.getElementById('authForm').classList.remove('hide');
+}
+
+// ---------- init ----------
+document.getElementById('fStatus').value = 'active';
+(async function init(){
+  buildSectionNav();
+  renderAdminLock();
+  renderAll();
+
+  const authReady = await waitForAuthBridge();
+  if(!authReady){
+    // تعذّر تحميل نظام تسجيل الدخول (مثلاً لا يوجد اتصال إنترنت) — لا نعرض البيانات بدون تحقق.
+    document.getElementById('authChecking').textContent = 'تعذّر الاتصال بخدمة تسجيل الدخول. تحقق من الإنترنت وأعد تحميل الصفحة.';
+    return;
+  }
+
+  window.firebaseAuthBridge.onChange(async (user)=>{
+    if(user){
+      showApp(user);
+      if(await hasCloudStorage()){
+        await loadCloudData();
+        buildSectionNav();
+        renderAdminLock();
+        renderAll();
+      }
+    } else {
+      showLoginForm();
+    }
+  });
+})();
+
+</script>
+</body>
+</html>
