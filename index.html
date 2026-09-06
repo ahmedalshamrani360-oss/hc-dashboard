@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HC Command Center — إدارة رأس المال البشري</title>
+<title>HC Command Center — إدارة رأس المال البشري | العيساكي للسيارات</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script type="module">
@@ -26,7 +29,6 @@
   const fbDb = getDatabase(fbApp);
   const fbAuth = getAuth(fbApp);
 
-  // Expose a small bridge on window so the regular (non-module) script below can use it.
   window.firebaseStorage = {
     async get(key){
       try{
@@ -44,7 +46,6 @@
     }
   };
 
-  // Expose a small Auth bridge on window so the regular (non-module) script below can use it.
   window.firebaseAuthBridge = {
     async signIn(email, password){
       try{
@@ -60,48 +61,215 @@
     onChange(cb){ onAuthStateChanged(fbAuth, cb); }
   };
 
-  // Signal to the rest of the app that Firebase is ready to use.
   window.dispatchEvent(new Event('firebase-ready'));
 </script>
 <style>
-:root{--bg:#f4f7fb;--card:#fff;--ink:#101827;--muted:#667085;--line:#e5e7eb;--blue:#2563eb;--green:#059669;--red:#dc2626;--amber:#d97706;--purple:#7c3aed;--slate:#0f172a;--shadow:0 12px 34px rgba(15,23,42,.08)}
-*{box-sizing:border-box} body{margin:0;background:var(--bg);font-family:Tahoma,Arial,sans-serif;color:var(--ink)}
-.app{display:grid;grid-template-columns:280px 1fr;min-height:100vh} .side{background:#0f172a;color:#fff;padding:22px;position:sticky;top:0;height:100vh;overflow:auto} .brand{display:flex;gap:12px;align-items:center;margin-bottom:18px} .logo{width:46px;height:46px;border-radius:16px;background:linear-gradient(135deg,#2563eb,#7c3aed);display:grid;place-items:center;font-weight:900} .brand b{font-size:16px} .brand span{font-size:12px;color:#cbd5e1}
-.navlabel{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin:16px 6px 8px}
-.nav button{width:100%;border:0;background:transparent;color:#cbd5e1;text-align:right;padding:12px 13px;border-radius:14px;cursor:pointer;font-weight:700;margin:4px 0;font-size:13.5px} .nav button.active,.nav button:hover{background:rgba(255,255,255,.1);color:#fff}
-.nav button.section-btn{display:flex;justify-content:space-between;align-items:center}
-.nav button.section-btn .cnt{font-size:11px;background:rgba(255,255,255,.12);border-radius:999px;padding:2px 8px;font-weight:800}
-.nav button.section-btn.active .cnt{background:rgba(255,255,255,.25)}
-.side-note{font-size:12px;color:#94a3b8;line-height:1.8;margin-top:22px;border-top:1px solid rgba(255,255,255,.12);padding-top:16px}
-.main{padding:24px 28px} .section{display:none} .section.active{display:block} .top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:18px} h1{margin:0 0 8px;font-size:26px} h2{font-size:19px;margin:0 0 10px} h3{font-size:15px;margin:0 0 10px} p{margin:0;color:var(--muted);line-height:1.7} .actions{display:flex;gap:10px;flex-wrap:wrap} .btn{border:1px solid var(--line);background:#fff;padding:11px 14px;border-radius:14px;cursor:pointer;font-weight:800} .btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)} .btn.green{background:#ecfdf5;color:#065f46;border-color:#a7f3d0} .btn.red{background:#fff1f2;color:#991b1b;border-color:#fecdd3}
-.card{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:18px} .grid{display:grid;gap:16px} .kpis{grid-template-columns:repeat(4,minmax(160px,1fr))} .two{grid-template-columns:2fr 1fr} .three{grid-template-columns:repeat(3,1fr)} .filters{grid-template-columns:2fr 1fr;margin-bottom:16px} .filter label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px} select,input{width:100%;border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff;font-family:inherit} .kpi label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em} .kpi .num{font-size:28px;font-weight:900;margin:10px 0 6px;direction:ltr;text-align:right} .kpi small{color:var(--muted)}
-.alerts{grid-template-columns:repeat(3,1fr);margin:16px 0} .alert{border-radius:16px;padding:14px;border:1px solid;font-weight:800} .alert.red{background:#fff1f2;color:#991b1b;border-color:#fecdd3} .alert.amber{background:#fffbeb;color:#92400e;border-color:#fde68a} .alert.green{background:#ecfdf5;color:#065f46;border-color:#a7f3d0}
-table{width:100%;border-collapse:collapse;font-size:13px} th,td{padding:11px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap} th{background:#f8fafc;color:#475467;font-size:12px;position:sticky;top:0} .tablewrap{max-height:420px;overflow:auto;border:1px solid var(--line);border-radius:16px} .pill{display:inline-block;padding:5px 9px;border-radius:999px;font-size:12px;font-weight:900} .pill.green{background:#dcfce7;color:#166534} .pill.red{background:#fee2e2;color:#991b1b} .pill.amber{background:#fef3c7;color:#92400e} .muted{color:var(--muted)}
-.admin-login{max-width:460px;margin:30px auto;background:#fff;border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);padding:24px}.admin-login h2{margin:0 0 10px}.admin-login .row{display:flex;gap:10px;margin-top:14px}.admin-login input{flex:1}.admin-content.locked{display:none}.adminbox{border:2px dashed #cbd5e1;border-radius:24px;background:#fff;padding:28px;text-align:center;cursor:pointer} .adminbox input{display:none} .note{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;border-radius:16px;padding:13px;margin:14px 0;line-height:1.8} .hide{display:none!important} .metric-line{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:10px 0;color:#344054} .metric-line b{direction:ltr} .chart-empty-msg{padding:30px 10px;text-align:center;color:var(--muted);font-size:13px}
-@media(max-width:1100px){.app{grid-template-columns:1fr}.side{height:auto;position:relative}.kpis,.alerts,.two,.three,.filters{grid-template-columns:1fr}.top{flex-direction:column}}
-#authGate{position:fixed;inset:0;background:linear-gradient(160deg,#0f172a,#1e293b);display:grid;place-items:center;z-index:9999;padding:20px}
-#authGate .box{max-width:400px;width:100%;background:#fff;border-radius:24px;box-shadow:0 20px 60px rgba(0,0,0,.35);padding:30px}
-#authGate .brand2{display:flex;gap:12px;align-items:center;margin-bottom:20px}
-#authGate .logo2{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#2563eb,#7c3aed);display:grid;place-items:center;font-weight:900;color:#fff}
-#authGate h2{margin:0 0 6px;font-size:19px}
-#authGate p{color:var(--muted);margin-bottom:18px;line-height:1.7;font-size:13px}
-#authGate label{display:block;font-size:12px;color:var(--muted);margin:12px 0 6px}
-#authGate input{width:100%;border:1px solid var(--line);border-radius:12px;padding:11px;font-family:inherit}
-#authGate button{width:100%;margin-top:18px;background:var(--blue);color:#fff;border:0;padding:12px;border-radius:14px;font-weight:800;cursor:pointer;font-size:14px}
+@layer base, layout, components, utilities;
+
+@layer base{
+:root{
+  --brand:#2E3192;
+  --brand-2:#4B4FCB;
+  --brand-dark:#181B4D;
+  --ink:#12142B;
+  --muted:#6B7280;
+  --bg:#F3F4FA;
+  --card:#FFFFFF;
+  --line:#E7E8F2;
+  --green:#0E9F6E;
+  --green-bg:#E9FBF3;
+  --green-line:#BEEFDA;
+  --red:#DC2626;
+  --red-bg:#FDEEEE;
+  --red-line:#F6C9C9;
+  --amber:#B45309;
+  --amber-bg:#FEF6E7;
+  --amber-line:#F5DFA8;
+  --shadow:0 16px 40px -12px rgba(24,27,77,.14);
+  --shadow-sm:0 6px 16px -8px rgba(24,27,77,.12);
+  --radius-lg:20px;
+  --radius-md:14px;
+  --radius-sm:10px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;overflow-x:hidden}
+body{background:var(--bg);font-family:'IBM Plex Sans Arabic',Tahoma,Arial,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+.figures{font-family:'Inter','IBM Plex Sans Arabic',sans-serif;direction:ltr;font-variant-numeric:tabular-nums}
+h1,h2,h3{font-family:'IBM Plex Sans Arabic',sans-serif;letter-spacing:0}
+}
+
+@layer layout{
+.app{display:grid;grid-template-columns:min(272px,22vw) 1fr;min-height:100vh}
+.side{background:linear-gradient(175deg,#14163F 0%,#1B1E5C 55%,#22265E 100%);color:#fff;padding:clamp(16px,2vw,24px) clamp(14px,1.6vw,20px);position:sticky;top:0;height:100vh;overflow:auto;display:flex;flex-direction:column}
+.main{padding:clamp(16px,2.2vw,28px) clamp(16px,2.6vw,32px) 40px;min-width:0}
+.section{display:none}
+.section.active{display:block}
+.top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap}
+
+/* fluid type scale so text/numbers shrink gracefully with the viewport */
+h1{font-size:clamp(19px,2.3vw,25px)}
+h2{font-size:clamp(16px,1.8vw,19px)}
+h3{font-size:clamp(13px,1.4vw,14.5px)}
+.kpi .num{font-size:clamp(20px,2.4vw,27px)}
+
+@media(max-width:1100px){
+  .app{grid-template-columns:1fr}
+  .side{height:auto;position:relative}
+  .kpis,.three{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+  .alerts{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+  .two,.filters{grid-template-columns:1fr}
+  .top{flex-direction:column}
+}
+@media(max-width:640px){
+  .main{padding:14px}
+  .side{padding:16px}
+  .kpis,.three,.alerts{grid-template-columns:1fr}
+  .card{padding:15px;border-radius:16px}
+  table{font-size:12px}
+  th,td{padding:9px 8px}
+  .brand-strip{flex-wrap:wrap}
+  #authGate .box{max-width:100%}
+}
+}
+
+@layer components{
+/* ---- Sidebar ---- */
+.side::before{content:"";position:absolute;inset:0;background:radial-gradient(480px 260px at 85% -10%, rgba(120,124,255,.28), transparent 60%);pointer-events:none}
+.side > *{position:relative;z-index:1}
+.brandmark{display:flex;justify-content:center;padding:6px 4px 18px;border-bottom:1px solid rgba(255,255,255,.12);margin-bottom:16px}
+.brandmark img{height:42px;width:auto}
+.navlabel{font-size:11px;color:#8B8FD1;letter-spacing:.04em;margin:18px 8px 8px;font-weight:600}
+.nav button{width:100%;border:0;background:transparent;color:#C6C9F2;text-align:right;padding:11px 13px;border-radius:13px;cursor:pointer;font-weight:600;margin:3px 0;font-size:13.5px;display:flex;align-items:center;gap:10px;transition:background .15s ease,color .15s ease}
+.nav button svg{width:17px;height:17px;flex:0 0 auto;opacity:.85}
+.nav button.section-btn{justify-content:space-between}
+.nav button .navleft{display:flex;align-items:center;gap:10px}
+.nav button .dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+.nav button .cnt{font-size:11px;background:rgba(255,255,255,.1);border-radius:999px;padding:2px 9px;font-weight:700;font-family:'Inter',sans-serif}
+.nav button.active{background:linear-gradient(90deg,rgba(120,124,255,.28),rgba(120,124,255,.1));color:#fff;box-shadow:inset 0 0 0 1px rgba(154,158,255,.35)}
+.nav button.active .cnt{background:rgba(255,255,255,.22)}
+.nav button:hover:not(.active){background:rgba(255,255,255,.07);color:#fff}
+.side-note{font-size:12px;color:#9EA1D6;line-height:1.8;margin-top:auto;padding-top:18px}
+.userchip{border-top:1px solid rgba(255,255,255,.12);margin-top:14px;padding-top:14px;display:flex;flex-direction:column;gap:10px}
+#authUserLabel{font-size:12px;color:#C6C9F2}
+#logoutBtn{width:100%;background:rgba(255,255,255,.06);color:#FCA5A5;border:1px solid rgba(255,255,255,.14);padding:10px;border-radius:12px;font-weight:700;cursor:pointer;font-size:12.5px;display:flex;align-items:center;justify-content:center;gap:6px}
+#logoutBtn:hover{background:rgba(220,38,38,.16)}
+.brand-strip{display:flex;gap:8px;margin-top:16px}
+.brand-chip{flex:1;background:#fff;border-radius:14px;padding:9px;display:flex;align-items:center;justify-content:center;min-height:44px}
+.brand-chip img{max-height:26px;max-width:100%;object-fit:contain}
+.partner-label{font-size:10.5px;color:#8B8FD1;text-align:center;margin-top:8px;letter-spacing:.02em}
+
+/* ---- Buttons ---- */
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:#fff;padding:11px 16px;border-radius:13px;cursor:pointer;font-weight:700;font-family:inherit;font-size:13.5px;color:var(--ink);transition:box-shadow .15s ease,transform .1s ease}
+.btn:hover{box-shadow:var(--shadow-sm)}
+.btn.primary{background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#fff;border-color:transparent}
+.btn.green{background:var(--green-bg);color:#0B6E4F;border-color:var(--green-line)}
+.btn.red{background:var(--red-bg);color:#9B1C1C;border-color:var(--red-line)}
+
+/* ---- Cards & grids ---- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);padding:20px;min-width:0}
+.grid{display:grid;gap:16px;min-width:0}
+.grid > *{min-width:0}
+.kpis{grid-template-columns:repeat(4,minmax(160px,1fr))}
+.two{grid-template-columns:2fr 1fr}
+.three{grid-template-columns:repeat(3,1fr)}
+.filters{grid-template-columns:2fr 1fr;margin-bottom:16px}
+.filter label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600}
+select,input{width:100%;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff;font-family:inherit;font-size:13.5px;color:var(--ink)}
+select:focus,input:focus{outline:2px solid rgba(46,49,146,.25);border-color:var(--brand)}
+h1{margin:0 0 6px;font-size:25px;font-weight:700}
+h2{font-size:19px;margin:0 0 10px;font-weight:700}
+h3{font-size:14.5px;margin:0 0 12px;font-weight:700;display:flex;align-items:center;gap:8px}
+p{margin:0;color:var(--muted);line-height:1.75;font-size:13.5px}
+
+/* ---- KPI cards ---- */
+.kpi{position:relative;overflow:hidden;padding-right:20px}
+.kpi::before{content:"";position:absolute;top:0;right:0;bottom:0;width:4px;background:var(--kpi-accent,var(--brand))}
+.kpi-top{display:flex;justify-content:space-between;align-items:flex-start}
+.kpi label{font-size:12px;color:var(--muted);font-weight:600}
+.kpi-icon{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--kpi-accent-bg,#EEF0FC);color:var(--kpi-accent,var(--brand));flex:0 0 auto}
+.kpi-icon svg{width:18px;height:18px}
+.kpi .num{font-size:27px;font-weight:800;margin:12px 0 4px;font-family:'Inter',sans-serif;direction:ltr;text-align:right;color:var(--ink)}
+.kpi small{color:var(--muted);font-size:12px}
+
+/* ---- Alerts ---- */
+.alerts{grid-template-columns:repeat(3,1fr);margin:16px 0}
+.alert{border-radius:var(--radius-md);padding:14px 16px;border:1px solid;font-weight:700;font-size:13.5px;display:flex;align-items:center;gap:10px}
+.alert svg{width:18px;height:18px;flex:0 0 auto}
+.alert.red{background:var(--red-bg);color:#9B1C1C;border-color:var(--red-line)}
+.alert.amber{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-line)}
+.alert.green{background:var(--green-bg);color:#0B6E4F;border-color:var(--green-line)}
+
+/* ---- Tables ---- */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:12px 11px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th{background:#F7F7FC;color:#5A5D89;font-size:11.5px;font-weight:700;position:sticky;top:0;letter-spacing:.02em}
+tbody tr:hover{background:#FAFAFF}
+.tablewrap{max-height:420px;overflow:auto;border:1px solid var(--line);border-radius:var(--radius-md);width:100%;min-width:0}
+.simple-list{margin:0;padding:0;list-style:none}
+.simple-list li{padding:8px 12px;border-bottom:1px solid var(--line);font-size:13.5px}
+.simple-list li:last-child{border-bottom:0}
+.pill{display:inline-block;padding:5px 10px;border-radius:999px;font-size:11.5px;font-weight:700}
+.pill.green{background:var(--green-bg);color:#0B6E4F}
+.pill.red{background:var(--red-bg);color:#9B1C1C}
+.pill.amber{background:var(--amber-bg);color:var(--amber)}
+.muted{color:var(--muted)}
+
+/* ---- Admin ---- */
+.admin-login{max-width:460px;margin:30px auto;background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);padding:26px}
+.admin-login h2{margin:0 0 10px}
+.admin-login .row{display:flex;gap:10px;margin-top:14px}
+.admin-login input{flex:1}
+.admin-content.locked{display:none}
+.adminbox{border:2px dashed #C7C9EE;border-radius:var(--radius-lg);background:#FAFAFF;padding:32px;text-align:center;cursor:pointer;transition:border-color .15s ease,background .15s ease}
+.adminbox:hover{border-color:var(--brand);background:#F5F5FF}
+.adminbox input{display:none}
+.adminbox .uicon{width:44px;height:44px;margin:0 auto;color:var(--brand)}
+.note{background:#EEF0FC;border:1px solid #D6D9F5;color:#2B2E7A;border-radius:var(--radius-md);padding:14px 16px;margin:14px 0;line-height:1.85;font-size:13px}
+.hide{display:none!important}
+.metric-line{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:11px 0;color:#344054;font-size:13.5px}
+.metric-line b{direction:ltr;font-family:'Inter',sans-serif}
+.chart-empty-msg{padding:40px 10px;text-align:center;color:var(--muted);font-size:13px}
+.admin-denied{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:40px 20px;color:var(--muted)}
+.admin-denied svg{width:40px;height:40px;color:var(--amber)}
+
+/* ---- Auth gate ---- */
+#authGate{position:fixed;inset:0;background:linear-gradient(165deg,#14163F,#1B1E5C 55%,#22265E);display:grid;place-items:center;z-index:9999;padding:20px}
+#authGate .box{max-width:372px;width:100%;background:#fff;border-radius:22px;overflow:hidden;box-shadow:0 30px 70px rgba(6,7,32,.45)}
+#authGate .banner{background:linear-gradient(175deg,#14163F,#1B1E5C 70%,#22265E);padding:26px 30px 22px;display:flex;flex-direction:column;align-items:center;text-align:center}
+#authGate .banner img{height:36px;margin-bottom:12px}
+#authGate .banner .tag{font-size:12px;color:#B7BAE8;line-height:1.8}
+#authGate .formwrap{padding:26px 30px 30px}
+#authGate h2{margin:0 0 6px;font-size:18px}
+#authGate p{color:var(--muted);margin-bottom:16px;line-height:1.75;font-size:13px}
+#authGate label{display:block;font-size:12px;color:var(--muted);margin:12px 0 6px;font-weight:600}
+#authGate input{width:100%;border:1px solid var(--line);border-radius:12px;padding:11px 12px;font-family:inherit}
+#authGate button{width:100%;margin-top:18px;background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#fff;border:0;padding:13px;border-radius:13px;font-weight:700;cursor:pointer;font-size:14px}
 #authGate button:disabled{opacity:.6;cursor:default}
-#authGate .err{color:#dc2626;font-size:12.5px;margin-top:10px;line-height:1.7}
-#authGate .checking{color:#94a3b8;font-size:13px;text-align:center}
+#authGate .err{color:#DC2626;font-size:12.5px;margin-top:10px;line-height:1.7}
+#authGate .checking{color:var(--muted);font-size:13px;text-align:center;padding:28px 30px}
+#authGate .checking-icon{width:40px;height:40px;margin:0 auto 14px;color:#B9BDDD}
+#authGate .checking-icon.err-icon{color:#DC2626}
+#authGate .checking .retry-btn{width:auto;margin:16px auto 0;padding:9px 22px;font-size:13px}
+#authGate .auth-footer{margin-top:14px;font-size:11px;color:#B7BAE8;text-align:center}
 .app.gated{display:none}
-#logoutBtn{width:100%;margin-top:10px;background:rgba(255,255,255,.08);color:#fecaca;border:1px solid rgba(255,255,255,.12)}
+}
 </style>
 </head>
 <body>
 
 <div id="authGate">
   <div class="box">
-    <div class="brand2"><div class="logo2">HC</div><div><b>HC Command Center</b><br><span style="font-size:12px;color:var(--muted)">رأس المال البشري — Alesayi Motors</span></div></div>
-    <div id="authChecking" class="checking">جاري التحقق من تسجيل الدخول...</div>
-    <div id="authForm" class="hide">
+    <div class="banner">
+      <img src="data:image/png;base64,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" alt="Alesayi Motors">
+      <div class="tag">نظام إدارة رأس المال البشري</div>
+    </div>
+    <div id="authChecking" class="checking">
+      <svg id="authCheckingIcon" class="checking-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h.01"/><path d="M8.5 16.5a5 5 0 0 1 7 0"/><path d="M5 13a10 10 0 0 1 14 0"/><path d="M1.5 9.5a15 15 0 0 1 21 0"/></svg>
+      <div id="authCheckingMsg">جاري التحقق من تسجيل الدخول...</div>
+      <button id="authRetryBtn" class="hide retry-btn" onclick="location.reload()">إعادة المحاولة</button>
+    </div>
+    <div id="authForm" class="hide formwrap">
       <h2>تسجيل الدخول</h2>
       <p>هذه الصفحة تحتوي على بيانات موظفين حساسة. الدخول متاح فقط لمن لديه حساب مصرّح.</p>
       <label>البريد الإلكتروني</label>
@@ -112,23 +280,35 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{padding:11px;bor
       <div id="authError" class="err hide"></div>
     </div>
   </div>
+  <div class="auth-footer" id="authFooter"></div>
 </div>
 
 <div class="app gated" id="appRoot">
   <aside class="side">
-    <div class="brand"><div class="logo">HC</div><div><b>HC Command Center</b><br><span>رأس المال البشري — Alesayi Motors</span></div></div>
+    <div class="brandmark"><img src="data:image/png;base64,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" alt="Alesayi Motors"></div>
 
     <div class="navlabel">الأقسام</div>
     <div class="nav" id="sectionNav"></div>
 
     <div class="navlabel">أدوات</div>
     <div class="nav">
-      <button data-page="admin" onclick="showPage('admin')">🔒 رفع البيانات (أدمن)</button>
+      <button data-page="admin" onclick="showPage('admin')">
+        <span class="navleft">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+          <span>رفع البيانات (أدمن)</span>
+        </span>
+      </button>
     </div>
 
-    <div class="side-note">البيانات تُحفظ وتُزامن تلقائياً — أي جهاز يفتح هذا الرابط ويعمل تحديث للصفحة يشوف آخر ملف تم رفعه.
-      <div id="authUserLabel" style="margin-top:10px;color:#cbd5e1"></div>
-      <button id="logoutBtn" class="btn" onclick="doSignOut()">تسجيل الخروج</button>
+    <div class="side-note">
+      البيانات تُحفظ وتُزامن تلقائياً — أي جهاز يفتح هذا الرابط ويعمل تحديث للصفحة يشوف آخر ملف تم رفعه.
+      <div class="userchip">
+        <div id="authUserLabel"></div>
+        <button id="logoutBtn" onclick="doSignOut()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          تسجيل الخروج
+        </button>
+      </div>
     </div>
   </aside>
 
@@ -145,8 +325,14 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{padding:11px;bor
 
       <div class="grid alerts">
         <div class="alert green" id="saudAlert">—</div>
-        <div class="alert amber" id="turnAlert">—</div>
+        <div class="alert amber" id="turnAlert" style="cursor:pointer" onclick="toggleTurnoverDetails()" title="اضغط لعرض تفاصيل من غادر ومن انضم">—</div>
         <div class="alert red" id="dataAlert" style="cursor:pointer" onclick="toggleMissingDetails()" title="اضغط لعرض تفاصيل الناقصين">—</div>
+      </div>
+
+      <div class="card" id="turnoverDetailsCard" style="margin:0 0 16px;display:none">
+        <h3>تفاصيل مؤشر الدوران</h3>
+        <div id="turnoverAsOf" class="muted" style="margin-bottom:10px;font-size:12.5px"></div>
+        <div class="tablewrap"><table id="turnoverTable"></table></div>
       </div>
 
       <div class="card" id="missingDataCard" style="margin:0 0 16px;display:none">
@@ -155,18 +341,36 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{padding:11px;bor
       </div>
 
       <div class="grid kpis">
-        <div class="card kpi"><label>عدد الموظفين النشطين</label><div class="num" id="kActive">0</div><small>ضمن الفلتر الحالي</small></div>
-        <div class="card kpi"><label>نسبة السعودة</label><div class="num" id="kSaud">0%</div><small>من إجمالي النشطين بالفلتر</small></div>
-        <div class="card kpi"><label>إجمالي الرواتب</label><div class="num" id="kPayroll">0</div><small>ريال سعودي / شهرياً</small></div>
-        <div class="card kpi"><label>متوسط الراتب</label><div class="num" id="kAvg">0</div><small>ريال سعودي</small></div>
+        <div class="card kpi" style="--kpi-accent:#2E3192;--kpi-accent-bg:#EEF0FC">
+          <div class="kpi-top"><label>عدد الموظفين النشطين</label>
+            <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          </div>
+          <div class="num" id="kActive">0</div><small>ضمن الفلتر الحالي</small>
+        </div>
+        <div class="card kpi" style="--kpi-accent:#0E9F6E;--kpi-accent-bg:#E9FBF3">
+          <div class="kpi-top"><label>نسبة السعودة</label>
+            <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/><path d="M8.5 13.5 6 21l6-3 6 3-2.5-7.5"/></svg></div>
+          </div>
+          <div class="num" id="kSaud">0%</div><small>من إجمالي النشطين بالفلتر</small>
+        </div>
+        <div class="card kpi" style="--kpi-accent:#B45309;--kpi-accent-bg:#FEF6E7">
+          <div class="kpi-top"><label>إجمالي الرواتب</label>
+            <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 6v0M18 18v0"/></svg></div>
+          </div>
+          <div class="num" id="kPayroll">0</div><small>ريال سعودي / شهرياً</small>
+        </div>
+        <div class="card kpi" style="--kpi-accent:#4B4FCB;--kpi-accent-bg:#EEF0FC">
+          <div class="kpi-top"><label>متوسط الراتب</label>
+            <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+          </div>
+          <div class="num" id="kAvg">0</div><small>ريال سعودي</small>
+        </div>
       </div>
 
-      <div class="card" style="margin-top:16px">
-        <h3>تفصيل حالات "النشطين" — <span id="statusBreakdownTotal" class="muted" style="font-weight:400;font-size:13px"></span></h3>
-        <p style="margin-bottom:8px">هذا التفصيل يوضح كم موظف نشط فعلياً بدون أي إشعار، وكم موظف "نشط" بالنظام لكن عنده إشعار مغادرة (استقالة، تقاعد، انتهاء عقد...) بتاريخ إنهاء لسه ما وصل.</p>
-        <div id="statusBreakdown"></div>
+      <div class="card" id="statusBreakdownCard" style="margin-top:16px;display:none">
+        <h3>الموظفون الذين لديهم إشعار مغادرة — <span id="statusBreakdownTotal" class="muted" style="font-weight:400;font-size:13px"></span></h3>
+        <div class="tablewrap"><table id="statusBreakdownTable"></table></div>
       </div>
-
 
       <div class="grid filters" style="margin-top:16px">
         <div class="filter"><label>بحث بالاسم / الرقم الوظيفي / المسمى</label><input id="fSearch" placeholder="اكتب هنا..." oninput="renderAll()"></div>
@@ -186,24 +390,26 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{padding:11px;bor
 
     <!-- ADMIN -->
     <section class="section" id="admin">
-      <div id="adminLogin" class="admin-login">
-        <h2>دخول الأدمن</h2>
-        <p>أدخل الرقم السري لتتمكن من رفع ملف إكسل جديد.</p>
-        <div class="row"><input id="adminPass" type="password" placeholder="الرقم السري" onkeydown="if(event.key==='Enter')unlockAdmin()"><button class="btn primary" onclick="unlockAdmin()">دخول</button></div>
-        <p id="adminError" class="hide" style="color:#dc2626;margin-top:10px">الرقم السري غير صحيح</p>
+      <div id="adminDenied" class="card admin-denied hide">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+        <h3 style="margin:0">رفع البيانات يحتاج كلمة المرور</h3>
+        <p>أدخل كلمة مرور رفع البيانات للمتابعة.</p>
+        <input id="uploadPassword" type="password" placeholder="كلمة المرور" style="max-width:220px;text-align:center;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-family:inherit" onkeydown="if(event.key==='Enter')checkUploadPassword()">
+        <button class="btn" style="max-width:160px" onclick="checkUploadPassword()">دخول</button>
+        <div id="uploadPasswordErr" class="hide" style="color:#DC2626;font-size:12.5px"></div>
       </div>
-      <div id="adminContent" class="admin-content locked">
+      <div id="adminContent">
         <div class="top"><div><h1>رفع البيانات</h1><p>ارفع ملف إكسل كامل (يمكن أن يحتوي على كل موظفي الشركة وأقسامها) — سيتم قراءته تلقائياً واستخراج الأقسام الستة المحددة فقط، ثم عرض من انضم ومن غادر مقارنة بالبيانات الحالية.</p></div>
-          <div class="actions"><button class="btn red" onclick="lockAdmin()">قفل / خروج</button><button class="btn" onclick="resetDefault()">استعادة البيانات الافتراضية</button></div>
+          <div class="actions"><button class="btn red" onclick="clearAllData()">مسح كل البيانات</button></div>
         </div>
         <div class="note">الأقسام المعتمدة: HC Admin، HC Operation، HC Business Partner، OD (Organization Development)، Talent Acquisition، Training. أي موظف خارج هذه الأقسام في الملف المرفوع سيتم تجاهله تلقائياً.<br>أي صف يكون المسمى الوظيفي فيه يحتوي على "SJAHI" (طلاب) يُستثنى تلقائياً حتى لو كان تحت قسم التدريب — لأنهم مو موظفين.<br>كل ملف جديد يُرفع يستبدل البيانات السابقة بالكامل على كل الأجهزة (لا يتم الاحتفاظ بنسخ قديمة).</div>
         <div class="adminbox" onclick="document.getElementById('file').click()" ondragover="event.preventDefault()" ondrop="event.preventDefault();readUpload(event.dataTransfer.files[0])">
           <input type="file" id="file" accept=".xlsx,.xls" onchange="readUpload(this.files[0])">
-          <div style="font-size:40px">📤</div>
-          <div style="font-weight:800;margin-top:8px">اسحب ملف Excel هنا أو اضغط للاختيار</div>
+          <svg class="uicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <div style="font-weight:800;margin-top:10px">اسحب ملف Excel هنا أو اضغط للاختيار</div>
           <div class="muted" style="margin-top:6px">.xlsx / .xls</div>
         </div>
-        <div class="card" id="uploadResult" style="margin-top:16px">لم يتم رفع أي ملف بعد. البيانات الحالية محمّلة من آخر تحديث محفوظ أو من الملف الافتراضي.</div>
+        <div class="card" id="uploadResult" style="margin-top:16px">لم يتم رفع أي ملف بعد.</div>
       </div>
     </section>
 
@@ -211,7 +417,9 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{padding:11px;bor
 </div>
 
 <script>
-const ADMIN_PASSWORD = '360';
+// ---------- Upload access (simple shared password, not per-account) ----------
+// أي شخص يعرف هذه الكلمة يقدر يرفع/يمسح البيانات. غيّرها من هنا إذا احتجت.
+const UPLOAD_PASSWORD = '360';
 
 const TARGET_SECTIONS = [
   {key:'all', label:'كل الأقسام'},
@@ -230,8 +438,11 @@ const SECTION_PATTERNS = {
   'talant acquisition':'ta','talent acquisition':'ta',
   'training':'training'
 };
+const NAV_COLORS = ['#2E3192','#0E9F6E','#B45309','#4B4FCB','#0EA5A5','#DC2626'];
 
-const DEFAULT_ROWS_RAW = [{"employeeNo":23269,"nameAr":"محمد خليل ابراهيم مكاوي","name":"Mohammed Khalil Ibrahim Makkawi","hireDate":"2026-05-06","terminationDate":"","jobAr":"مدير عام الموارد البشرية","job":"GM Human Resources","department":"Human Capital","section":"Human Capital Admin","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"بندر سعيد عمر العيسائي","manager":"Bander Saeed Omer Alesayi","nationality":"Saudi","gender":"Male","mobile":548836842,"email":"m.makkawi@alesayi.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"","basicSalary":0,"housing":0,"transport":0,"totalSalary":0,"status":"Active","source":"MD"},{"employeeNo":22960,"nameAr":"سعود جعفر محمد سعدون","name":"Saud Jaffar Mohammed Sadoon","hireDate":"2024-06-02","terminationDate":"","jobAr":"مساعد اداري","job":"Admin Assistant","department":"Human Capital","section":"Human Capital Admin","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"محمد خليل ابراهيم مكاوي","manager":"Mohammed Khalil Ibrahim Makkawi","nationality":"India","gender":"Male","mobile":572579232,"email":"sadoon_sj@hotmail.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - غير سعودي","basicSalary":5500,"housing":1375,"transport":550,"totalSalary":7425,"status":"Active","source":"MD"},{"employeeNo":21392,"nameAr":"محمد أحمد عبدالله عسيري","name":"Mohammed Ahmad Abdullah Asiri","hireDate":"2012-05-09","terminationDate":"","jobAr":"مدير عمليات الموارد البشرية","job":"HR Operation Manager","department":"Human Capital","section":"HC Operation","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"محمد خليل ابراهيم مكاوي","manager":"Mohammed Khalil Ibrahim Makkawi","nationality":"Saudi","gender":"Male","mobile":552778658,"email":"masiri@alesayi-motors.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":13333,"housing":3334,"transport":1333,"totalSalary":18150,"status":"Active","source":"MD"},{"employeeNo":21620,"nameAr":"عبدالله محمد عبدالله الشيخي","name":"Abdullah Mohammed Abdullah Alshaikhi","hireDate":"2014-05-14","terminationDate":"","jobAr":"أخصائي أول موارد بشرية","job":"Senior HR Specialist","department":"Human Capital","section":"HC Operation","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"محمد أحمد عبدالله عسيري","manager":"Mohammed Ahmad Abdullah Asiri","nationality":"Saudi","gender":"Male","mobile":566676997,"email":"aalshaikhi@alesayi-motors.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":8000,"housing":2000,"transport":800,"totalSalary":10800,"status":"Active","source":"MD"},{"employeeNo":22534,"nameAr":"مصطفى بكر مصطفى برناوي","name":"Mustafa Baker Mustafa Barnawi","hireDate":"2021-05-02","terminationDate":"","jobAr":"اخصائي موارد بشرية","job":"HR Specialist","department":"Human Capital","section":"HC Operation","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"محمد أحمد عبدالله عسيري","manager":"Mohammed Ahmad Abdullah Asiri","nationality":"Saudi","gender":"Male","mobile":509551156,"email":"mbarnawi@alesayi-motors.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":7000,"housing":1750,"transport":700,"totalSalary":9450,"status":"Active","source":"MD"},{"employeeNo":22560,"nameAr":"صالحه سعيد ابراهيم باداود","name":"Saleha Saeed Ibrahim Badawood","hireDate":"2021-09-01","terminationDate":"","jobAr":"اخصائي موارد بشرية","job":"HR Specialist","department":"Human Capital","section":"HC Operation","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"محمد أحمد عبدالله عسيري","manager":"Mohammed Ahmad Abdullah Asiri","nationality":"Saudi","gender":"Female","mobile":569468338,"email":"sbadawood@alesayi-motors.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":7000,"housing":1750,"transport":700,"totalSalary":9450,"status":"Active","source":"MD"},{"employeeNo":22627,"nameAr":"مبارك عبدالرحمن الشهراني","name":"Mubarak Abdulrahman Alshahrani","hireDate":"2022-01-06","terminationDate":"","jobAr":"منسق موارد بشريه وعلاقات حكومية","job":"HR & GOV Coordinator","department":"Human Capital","section":"HC Operation","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"محمد أحمد عبدالله عسيري","manager":"Mohammed Ahmad Abdullah Asiri","nationality":"Saudi","gender":"Male","mobile":566906597,"email":"malShahrani@alesayi-motors.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":4500,"housing":1125,"transport":450,"totalSalary":6475,"status":"Active","source":"MD"},{"employeeNo":22835,"nameAr":"عادل يحي محمد هزازي","name":"Adel Yahya Mohammed Hazazi","hireDate":"2023-08-01","terminationDate":"","jobAr":"مسؤول موارد بشريه وعلاقات حكومية","job":"HR & GOV Officer","department":"Human Capital","section":"HC Operation","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"محمد أحمد عبدالله عسيري","manager":"Mohammed Ahmad Abdullah Asiri","nationality":"Saudi","gender":"Male","mobile":548884843,"email":"ahazazi@alesayi-motors.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":4500,"housing":1125,"transport":450,"totalSalary":7475,"status":"Active","source":"MD"},{"employeeNo":22841,"nameAr":"يحي عبدة يحي عقيلي","name":"Yahya Abdo Yahya Aqili","hireDate":"2023-08-13","terminationDate":"","jobAr":"اخصائي رواتب","job":"Payroll Specialist","department":"Human Capital","section":"HC Operation","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"محمد أحمد عبدالله عسيري","manager":"Mohammed Ahmad Abdullah Asiri","nationality":"Saudi","gender":"Male","mobile":544476875,"email":"yaqili@alesayi-motors.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":8000,"housing":2000,"transport":800,"totalSalary":10800,"status":"Active","source":"MD"},{"employeeNo":22628,"nameAr":"لمياء عبدالرحمن الشهري","name":"Lamya Abdulrahman Alshehri","hireDate":"2022-01-06","terminationDate":"","jobAr":"مستشار قانوني للموارد البشرية","job":"HR Legal Advisor","department":"Human Capital","section":"HC Operation","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"محمد أحمد عبدالله عسيري","manager":"Mohammed Ahmad Abdullah Asiri","nationality":"Saudi","gender":"Female","mobile":509442090,"email":"lalShehri@alesayi-motors.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":6000,"housing":1500,"transport":600,"totalSalary":8100,"status":"Active","source":"MD"},{"employeeNo":23272,"nameAr":"رنا حامد حمدان الحربي","name":"Rana Hamed H Alharbi","hireDate":"2026-05-17","terminationDate":"","jobAr":"مسؤول موارد بشرية","job":"HR Officer","department":"Human Capital","section":"HC Operation","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"محمد أحمد عبدالله عسيري","manager":"Mohammed Ahmad Abdullah Asiri","nationality":"Saudi","gender":"Female","mobile":502517690,"email":"rana.022alharbi@gmail.com","classification":"Non Productive Staff","region":"Western Region","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي (النظام الجديد)","basicSalary":5500,"housing":1375,"transport":550,"totalSalary":7425,"status":"Active","source":"MD"},{"employeeNo":22408,"nameAr":"محمد سعيد سليمان دنبغ","name":"Mohammed Saeed Sulaiman Dunbugh","hireDate":"2020-01-12","terminationDate":"","jobAr":"مدير شريك أعمال الموارد البشرية","job":"HR Business Partner Manager","department":"Human Capital","section":"HC Business Partner","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"محمد خليل ابراهيم مكاوي","manager":"Mohammed Khalil Ibrahim Makkawi","nationality":"Saudi","gender":"Male","mobile":547070982,"email":"mdhunbugh@alesayi-motors.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":13333,"housing":3334,"transport":1333,"totalSalary":18150,"status":"Active","source":"MD"},{"employeeNo":22870,"nameAr":"هشام محمد باقازي","name":"Hesham Mohammad Bakazi","hireDate":"2023-10-01","terminationDate":"","jobAr":"شريك أعمال الموارد البشرية","job":"HR Business Partner","department":"Human Capital","section":"HC Business Partner","branch":"Khorais Branch","city":"RIYADH","managerAr":"محمد سعيد سليمان دنبغ","manager":"Mohammed Saeed Sulaiman Dunbugh","nationality":"Saudi","gender":"Male","mobile":568356738,"email":"hbakazi@alesayi-motors.com","classification":"Non Productive Staff","region":"Central Region","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":10500,"housing":2625,"transport":1050,"totalSalary":14325,"status":"Active","source":"MD"},{"employeeNo":22609,"nameAr":"ساره عبدالعزيز صالح المبيريك","name":"Sarah Abdulaziz Saleh Almubayrik","hireDate":"2021-10-17","terminationDate":"","jobAr":"اخصائي موارد بشرية","job":"HR Specialist","department":"Human Capital","section":"HC Business Partner","branch":"Khorais Branch","city":"RIYADH","managerAr":"هشام محمد باقازي","manager":"Hesham Mohammad Bakazi","nationality":"Saudi","gender":"Female","mobile":501995665,"email":"salmubayrik@alesayi-motors.com","classification":"Non Productive Staff","region":"Central Region","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":7000,"housing":1750,"transport":700,"totalSalary":9450,"status":"Active","source":"MD"},{"employeeNo":22067,"nameAr":"عساف نسيم احمد الفرحان","name":"Assaf Nasim Ahmed Alfarhan","hireDate":"2018-03-15","terminationDate":"","jobAr":"اخصائي موارد بشرية","job":"HR Specialist","department":"Human Capital","section":"HC Business Partner","branch":"Dammam Branch","city":"DAMMAM","managerAr":"محمد سعيد سليمان دنبغ","manager":"Mohammed Saeed Sulaiman Dunbugh","nationality":"Saudi","gender":"Male","mobile":536864025,"email":"amfarhan@alesayi-motors.com","classification":"Non Productive Staff","region":"Eastern Region","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":7000,"housing":1750,"transport":700,"totalSalary":9850,"status":"Active","source":"MD"},{"employeeNo":23081,"nameAr":"غدي ابراهيم مغلي العصلاني","name":"Ghadi Ibrahim Alaslani","hireDate":"2025-02-12","terminationDate":"","jobAr":"اخصائي موارد بشرية","job":"HR Specialist","department":"Human Capital","section":"HC Business Partner","branch":"Dammam Branch","city":"DAMMAM","managerAr":"محمد سعيد سليمان دنبغ","manager":"Mohammed Saeed Sulaiman Dunbugh","nationality":"Saudi","gender":"Female","mobile":509515828,"email":"ghadiim4.alaslani@gmail.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":4500,"housing":1125,"transport":450,"totalSalary":6075,"status":"Active","source":"MD"},{"employeeNo":22133,"nameAr":"منصور احمد عبداللطيف الجحدلي","name":"Mansoor Ahmed Abdulatif Aljahdali","hireDate":"2018-07-01","terminationDate":"","jobAr":"مدير التطوير التنظيمي","job":"Organization Development Manager","department":"Human Capital","section":"HC Organization Development","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"محمد خليل ابراهيم مكاوي","manager":"Mohammed Khalil Ibrahim Makkawi","nationality":"Saudi","gender":"Male","mobile":566665803,"email":"maljahdali@alesayi-motors.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":13333,"housing":3334,"transport":1333,"totalSalary":18150,"status":"Active","source":"MD"},{"employeeNo":22559,"nameAr":"نور محمد حسن الفارسي","name":"Noor Mohammed Hassan Alfarsi","hireDate":"2021-09-01","terminationDate":"","jobAr":"اخصائي موارد بشرية","job":"HR Specialist","department":"Human Capital","section":"HC Organization Development","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"منصور احمد عبداللطيف الجحدلي","manager":"Mansoor Ahmed Abdulatif Aljahdali","nationality":"Saudi","gender":"Female","mobile":564234606,"email":"n-2999@hotmail.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":5500,"housing":1375,"transport":550,"totalSalary":7425,"status":"Active","source":"MD"},{"employeeNo":22537,"nameAr":"يوسف محمد حسن خياط","name":"Yousef Mohammed Hassan Khaiyat","hireDate":"2021-05-17","terminationDate":"","jobAr":"مسؤول تدريب","job":"Training Officer","department":"Human Capital","section":"HC Organization Development","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"منصور احمد عبداللطيف الجحدلي","manager":"Mansoor Ahmed Abdulatif Aljahdali","nationality":"Saudi","gender":"Male","mobile":506514055,"email":"ykhaiyat@alesayi-motors.com","classification":"Non Productive Staff","region":"Western Region","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":6000,"housing":1500,"transport":600,"totalSalary":8650,"status":"Active","source":"MD"},{"employeeNo":23092,"nameAr":"بهجت نايل ياسين ملا","name":"Bahjat Naiel Yassien Mulla","hireDate":"2025-04-20","terminationDate":"","jobAr":"مدير استقطاب المواهب","job":"Talent Acquisition Manager","department":"Human Capital","section":"Talant Acquisition","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"محمد خليل ابراهيم مكاوي","manager":"Mohammed Khalil Ibrahim Makkawi","nationality":"Saudi","gender":"Male","mobile":566544848,"email":"bmulla@alesayi-motors.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":19000,"housing":4750,"transport":1900,"totalSalary":25800,"status":"Active","source":"MD"},{"employeeNo":22702,"nameAr":"عبدالرحمن ياسين عمر شعبان","name":"Abdulrahman Yasin Omer Shaaban","hireDate":"2022-08-04","terminationDate":"","jobAr":"مشرف استقطاب المواهب","job":"Talent Acquisition Supervisor","department":"Human Capital","section":"Talant Acquisition","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"بهجت نايل ياسين ملا","manager":"Bahjat Naiel Yassien Mulla","nationality":"Saudi","gender":"Male","mobile":567774027,"email":"ashaaban@alesayi-motors.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":9000,"housing":2250,"transport":900,"totalSalary":12300,"status":"Active","source":"MD"},{"employeeNo":23113,"nameAr":"احمد خالد مبارك السفري","name":"Ahmed Khaled Mubarak Alsefri","hireDate":"2025-07-01","terminationDate":"","jobAr":"أخصائي استقطاب المواهب","job":"Talent Acquisition Specialist","department":"Human Capital","section":"Talant Acquisition","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"عبدالرحمن ياسين عمر شعبان","manager":"Abdulrahman Yasin Omer Shaaban","nationality":"Saudi","gender":"Male","mobile":564936643,"email":"aalsefri@alesayi-motors.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":7500,"housing":1875,"transport":750,"totalSalary":10275,"status":"Active","source":"MD"},{"employeeNo":22878,"nameAr":"ميساء حسين سلطان الصبحي","name":"Maisa Hussain Sultan Alsubhi","hireDate":"2023-10-15","terminationDate":"2026-10-13","jobAr":"أخصائي استقطاب المواهب","job":"Talent Acquisition Specialist","department":"Human Capital","section":"Talant Acquisition","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"بهجت نايل ياسين ملا","manager":"Bahjat Naiel Yassien Mulla","nationality":"Saudi","gender":"Female","mobile":502696849,"email":"malsubhi@alesayi-motors.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"إقالة / إنهاء خدمات","terminationClass":"مادة 74","terminationReason":"انتهاء العقد - عدم التجديد برغبة صاحب العمل","insuranceType":"تأمينات - سعودي","basicSalary":5500,"housing":1375,"transport":550,"totalSalary":7575,"status":"Active","source":"MD"},{"employeeNo":22677,"nameAr":"غيداء عثمان احمد بامردوف","name":"Ghaida Othman Ahmed Bamrdouf","hireDate":"2022-05-08","terminationDate":"","jobAr":"مسؤول استقطاب المواهب","job":"Talent Acquisition Officer","department":"Human Capital","section":"Talant Acquisition","branch":"Head Office Alesayi Plaza","city":"JEDDAH","managerAr":"عبدالرحمن ياسين عمر شعبان","manager":"Abdulrahman Yasin Omer Shaaban","nationality":"Saudi","gender":"Female","mobile":568670670,"email":"gbamrdouf@alesayi-motors.com","classification":"Non Productive Staff","region":"Head Office","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي","basicSalary":5500,"housing":1375,"transport":550,"totalSalary":7425,"status":"Active","source":"MD"},{"employeeNo":22935,"nameAr":"مهند اسحق موسى الحواري","name":"Muhannad Ishaq Mousa Alhawari","hireDate":"2024-03-10","terminationDate":"2026-12-31","jobAr":"مدير التدريب الاقليمي","job":"National Training Manager","department":"Human Capital","section":"Training","branch":"Kilo 11 Branch","city":"JEDDAH","managerAr":"منصور احمد عبداللطيف الجحدلي","manager":"Mansoor Ahmed Abdulatif Aljahdali","nationality":"Jordan","gender":"Male","mobile":596343317,"email":"malhawari@alesayi-motors.com","classification":"Non Productive Staff","region":"Western Region","terminationType":"إقالة / إنهاء خدمات","terminationClass":"مادة 74","terminationReason":"محال للتقاعد","insuranceType":"تأمينات - غير سعودي","basicSalary":20000,"housing":5000,"transport":2000,"totalSalary":27000,"status":"Active","source":"MD"},{"employeeNo":23000,"nameAr":"مارك جوزيف تيلمو روديل","name":"Marc Joseph Telmo Rodil","hireDate":"2024-08-06","terminationDate":"","jobAr":"قائد فريق التدريب الفني","job":"Technical Training Team Leader","department":"Human Capital","section":"Training","branch":"Kilo 11 Branch","city":"JEDDAH","managerAr":"مهند اسحق موسى الحواري","manager":"Muhannad Ishaq Mousa Alhawari","nationality":"Philipines","gender":"Male","mobile":561347381,"email":"marcrodil.tca@gmail.com","classification":"Non Productive Staff","region":"Western Region","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - غير سعودي","basicSalary":7000,"housing":1750,"transport":700,"totalSalary":9450,"status":"Active","source":"MD"},{"employeeNo":22585,"nameAr":"واج الدين شيخ سجرالدين","name":"Wajudden Shaikh Sajaruddin","hireDate":"2021-09-21","terminationDate":"","jobAr":"أخصائي تدريب دهانات","job":"Paint Training Instructor","department":"Human Capital","section":"Training","branch":"Kilo 11 Branch","city":"JEDDAH","managerAr":"مهند اسحق موسى الحواري","manager":"Muhannad Ishaq Mousa Alhawari","nationality":"India","gender":"Male","mobile":595029890,"email":"wshaikh@alesayi-motors.com","classification":"Non Productive Staff","region":"Western Region","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - غير سعودي","basicSalary":5000,"housing":1250,"transport":500,"totalSalary":6750,"status":"Active","source":"MD"},{"employeeNo":22973,"nameAr":"محسن اسماعيل احمد اكمو","name":"Mohssine Ismail Ahmed Aguemmou","hireDate":"2024-07-01","terminationDate":"","jobAr":"مدرب المبيعات والتسويق","job":"Sales & Marketing Training Facilitator","department":"Human Capital","section":"Training","branch":"Kilo 11 Branch","city":"JEDDAH","managerAr":"مهند اسحق موسى الحواري","manager":"Muhannad Ishaq Mousa Alhawari","nationality":"Moroccan","gender":"Male","mobile":541353504,"email":"maguemmou@alesayi-motors.com","classification":"Non Productive Staff","region":"Western Region","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - غير سعودي","basicSalary":10000,"housing":2500,"transport":1000,"totalSalary":13500,"status":"Active","source":"MD"},{"employeeNo":22974,"nameAr":"محمد عبدالغني عبدالفتاح علي","name":"Mohamed Abdelghani Abdelfattah Ali","hireDate":"2024-07-01","terminationDate":"","jobAr":"مدرب المهارات المهنية","job":"soft skills training facilitator","department":"Human Capital","section":"Training","branch":"Kilo 11 Branch","city":"JEDDAH","managerAr":"مهند اسحق موسى الحواري","manager":"Muhannad Ishaq Mousa Alhawari","nationality":"Egypt","gender":"Male","mobile":545813141,"email":"mohamed.ali.14197@gmail.com","classification":"Non Productive Staff","region":"Western Region","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - غير سعودي","basicSalary":10000,"housing":2500,"transport":1000,"totalSalary":13500,"status":"Active","source":"MD"},{"employeeNo":23209,"nameAr":"ايوجين كالسدان - سنسجون","name":"EUGENE CALICDAN - SINGSON","hireDate":"2025-11-18","terminationDate":"","jobAr":"قائد فريق التدريب الفني","job":"Technical Training Team Leader","department":"Human Capital","section":"Training","branch":"Kilo 11 Branch","city":"JEDDAH","managerAr":"مهند اسحق موسى الحواري","manager":"Muhannad Ishaq Mousa Alhawari","nationality":"Philipines","gender":"Male","mobile":557770454,"email":"eugenesingson@gmail.com","classification":"Non Productive Staff","region":"Western Region","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - غير سعودي","basicSalary":7000,"housing":1750,"transport":700,"totalSalary":9450,"status":"Active","source":"MD"},{"employeeNo":23086,"nameAr":"احمد محمد الشمراني","name":"Ahmed Mohammed Alshamrani","hireDate":"2025-03-04","terminationDate":"","jobAr":"منسق تدريب","job":"Training Coordinator","department":"Human Capital","section":"Training","branch":"Kilo 11 Branch","city":"JEDDAH","managerAr":"مهند اسحق موسى الحواري","manager":"Muhannad Ishaq Mousa Alhawari","nationality":"Saudi","gender":"Male","mobile":558275373,"email":"jaz.ahmed360@icloud.com","classification":"Non Productive Staff","region":"Western Region","terminationType":"","terminationClass":"","terminationReason":"","insuranceType":"تأمينات - سعودي (النظام الجديد)","basicSalary":7000,"housing":1750,"transport":700,"totalSalary":9450,"status":"Active","source":"MD"}];
+// لا يوجد بيانات موظفين حقيقية مضمّنة في الكود بعد الآن لحماية خصوصية الموظفين —
+// البيانات تُقرأ حصراً من قاعدة البيانات السحابية (Firebase) بعد رفعها من صفحة الأدمن.
+const DEFAULT_ROWS_RAW = [];
 
 function classifySection(raw){
   const t = String(raw||'').trim().toLowerCase();
@@ -244,7 +455,7 @@ function withSectionKey(arr){ return arr.map(r=>Object.assign({}, r, {sectionKey
 
 const DEFAULT_ROWS = withSectionKey(DEFAULT_ROWS_RAW);
 
-let adminAuthenticated = sessionStorage.getItem('hcc_admin_auth') === '1';
+let currentUserEmail = null;
 let rows = DEFAULT_ROWS;
 let lastUpdate = null;
 let currentSection = 'all';
@@ -275,9 +486,13 @@ function pick(r,keys){for(const k of keys){if(r[k]!==undefined && r[k]!==null &&
 // ---------- Sidebar / navigation ----------
 function buildSectionNav(){
   const box = document.getElementById('sectionNav');
-  box.innerHTML = TARGET_SECTIONS.map(s=>{
+  box.innerHTML = TARGET_SECTIONS.map((s,i)=>{
     const cnt = s.key==='all' ? matchedRows(rows).filter(r=>r.status==='Active').length : rows.filter(r=>r.sectionKey===s.key && r.status==='Active').length;
-    return `<button class="section-btn" data-section="${s.key}" onclick="selectSection('${s.key}')"><span>${s.label}</span><span class="cnt">${fmt(cnt)}</span></button>`;
+    const color = s.key==='all' ? '#8B8FD1' : NAV_COLORS[(i-1)%NAV_COLORS.length];
+    return `<button class="section-btn" data-section="${s.key}" onclick="selectSection('${s.key}')">
+      <span class="navleft"><span class="dot" style="background:${color}"></span><span>${s.label}</span></span>
+      <span class="cnt figures">${fmt(cnt)}</span>
+    </button>`;
   }).join('');
   updateSectionNavActive();
 }
@@ -311,7 +526,18 @@ function filteredRows(){
 }
 function sectionLabel(key){ const s=TARGET_SECTIONS.find(x=>x.key===key); return s?s.label:key; }
 
-// ---------- Chart / table rendering ----------
+// ---------- Chart theming ----------
+const CHART_PALETTE = ['#2E3192','#0E9F6E','#B45309','#4B4FCB','#0EA5A5','#DC2626','#94A3B8','#C084FC'];
+const SEMANTIC_COLORS = {'سعودي':'#0E9F6E','غير سعودي':'#B9BDEB'};
+if(typeof Chart !== 'undefined'){
+  Chart.defaults.font.family = "'IBM Plex Sans Arabic','Inter',sans-serif";
+  Chart.defaults.font.size = 12;
+  Chart.defaults.color = '#6B7280';
+}
+function paletteFor(keys){
+  if(keys.every(k=>SEMANTIC_COLORS[k])) return keys.map(k=>SEMANTIC_COLORS[k]);
+  return keys.map((k,i)=>CHART_PALETTE[i%CHART_PALETTE.length]);
+}
 function chart(id,type,obj,label='عدد'){
   const ctx = document.getElementById(id);
   const wrap = ctx.parentElement;
@@ -332,8 +558,44 @@ function chart(id,type,obj,label='عدد'){
   }
   if(emptyMsg) emptyMsg.remove();
   ctx.style.display = '';
-  charts[id] = new Chart(ctx,{type, data:{labels:Object.keys(obj), datasets:[{label, data:Object.values(obj), borderWidth:1}]},
-    options:{responsive:true, plugins:{legend:{display:type==='doughnut'||type==='pie', position:'bottom'}}, scales:(type==='doughnut'||type==='pie')?{}:{y:{beginAtZero:true, ticks:{precision:0, stepSize: Math.max(1, Math.ceil(Math.max(...Object.values(obj),1)/8))}}}}});
+  const keys = Object.keys(obj);
+  const colors = paletteFor(keys);
+  const isCircular = type==='doughnut' || type==='pie';
+  charts[id] = new Chart(ctx,{
+    type,
+    data:{
+      labels:keys,
+      datasets:[{
+        label, data:Object.values(obj),
+        backgroundColor: colors,
+        borderColor: isCircular ? '#fff' : colors,
+        borderWidth: isCircular ? 3 : 0,
+        borderRadius: isCircular ? 0 : 8,
+        borderSkipped: false,
+        hoverOffset: isCircular ? 6 : 0,
+        maxBarThickness: 46
+      }]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:true,
+      plugins:{
+        legend:{
+          display: isCircular,
+          position:'bottom',
+          labels:{usePointStyle:true, pointStyle:'circle', boxWidth:8, padding:16, font:{size:12,weight:'600'}}
+        },
+        tooltip:{
+          backgroundColor:'#181B4D', padding:10, cornerRadius:10, titleFont:{weight:'700'},
+          bodyFont:{size:12.5}, displayColors:true, boxPadding:4
+        }
+      },
+      scales: isCircular ? {} : {
+        y:{beginAtZero:true, ticks:{precision:0, stepSize: Math.max(1, Math.ceil(Math.max(...Object.values(obj),1)/8)), font:{size:11}}, grid:{color:'#EEF0F7'}},
+        x:{ticks:{font:{size:11}}, grid:{display:false}}
+      }
+    }
+  });
 }
 function table(el, cols, data){
   el.innerHTML = '<thead><tr>'+cols.map(c=>`<th>${c[1]}</th>`).join('')+'</tr></thead><tbody>'+
@@ -347,7 +609,7 @@ function formatCell(k,v,row){
     return '<span class="pill red">غادر</span>';
   }
   if(k==='sectionKey') return sectionLabel(v);
-  if(k==='totalSalary') return fmt(v);
+  if(k==='totalSalary') return '<span class="figures">'+fmt(v)+'</span>';
   return val(v);
 }
 function missingFields(r){
@@ -362,6 +624,46 @@ function toggleMissingDetails(){
   missingDataVisible = !missingDataVisible;
   document.getElementById('missingDataCard').style.display = missingDataVisible ? '' : 'none';
 }
+let turnoverDetailsVisible = false;
+function toggleTurnoverDetails(){
+  turnoverDetailsVisible = !turnoverDetailsVisible;
+  document.getElementById('turnoverDetailsCard').style.display = turnoverDetailsVisible ? '' : 'none';
+  if(turnoverDetailsVisible) renderTurnoverDetails();
+}
+function fmtDateTime(iso){
+  if(!iso) return '';
+  const d = new Date(iso);
+  if(isNaN(d.getTime())) return '';
+  const datePart = d.toLocaleDateString('ar-SA', { year:'numeric', month:'long', day:'numeric' });
+  const timePart = d.toLocaleTimeString('ar-SA', { hour:'2-digit', minute:'2-digit' });
+  return datePart + ' — ' + timePart;
+}
+function renderTurnoverDetails(){
+  const asOfEl = document.getElementById('turnoverAsOf');
+  const table = document.getElementById('turnoverTable');
+  if(!lastUpdate){
+    asOfEl.textContent = 'لا توجد بيانات مقارنة متاحة بعد — تُحسب هذه التفاصيل تلقائياً عند رفع ملف جديد ومقارنته بالملف السابق.';
+    table.innerHTML = '';
+    return;
+  }
+  asOfEl.textContent = 'مقارنة آخر ملفّين تم رفعهما — الملف الحالي: "' + (lastUpdate.fileName||'') + '" بتاريخ ' + fmtDateTime(lastUpdate.at);
+  const joiners = (lastUpdate.joiners || []).map(r=>Object.assign({_type:'joined'}, r));
+  const leavers = (lastUpdate.leavers || []).map(r=>Object.assign({_type:'left'}, r));
+  const transfers = (lastUpdate.transfers || []).map(r=>Object.assign({_type:'transferred'}, r));
+  const combined = joiners.concat(leavers).concat(transfers);
+  table.innerHTML = combined.length
+    ? '<thead><tr><th>الرقم</th><th>الاسم</th><th>القسم</th><th>المسمى الوظيفي</th><th>الحالة</th></tr></thead><tbody>'+
+      combined.map(r=>{
+        let statusCell;
+        if(r._type==='joined') statusCell = '<span class="pill green">انضم</span>';
+        else if(r._type==='left') statusCell = '<span class="pill red">غادر</span>';
+        else statusCell = '<span class="pill amber">انتقل من '+sectionLabel(r.fromSectionKey)+' إلى '+sectionLabel(r.sectionKey)+'</span>';
+        const deptCell = r._type==='transferred' ? sectionLabel(r.fromSectionKey)+' ← '+sectionLabel(r.sectionKey) : sectionLabel(r.sectionKey);
+        return '<tr><td>'+val(r.employeeNo)+'</td><td>'+val(r.name)+'</td><td>'+deptCell+'</td><td>'+val(r.job)+'</td><td>'+statusCell+'</td></tr>';
+      }).join('')+
+      '</tbody>'
+    : '<tbody><tr><td class="muted">لا يوجد أي تغيير (انضمام أو مغادرة أو نقل بين الأقسام) بين آخر ملفّين.</td></tr></tbody>';
+}
 function renderMissingData(activeAct){
   const withMissing = activeAct.filter(r=>missingFields(r).length>0);
   document.getElementById('missingDataTable').innerHTML =
@@ -371,18 +673,11 @@ function renderMissingData(activeAct){
   return withMissing.length;
 }
 function statusBreakdown(activeAct){
-  const trueActive = activeAct.filter(r=>!r.terminationReason);
   const pending = activeAct.filter(r=>r.terminationReason);
-  const byReason = {};
-  pending.forEach(r=>{
-    const key = r.terminationReason || 'غير محدد';
-    byReason[key] = (byReason[key]||0) + 1;
-  });
-  const rowsHtml = ['<div class="metric-line"><span>نشط فعلي (بدون أي إشعار مغادرة)</span><b>'+fmt(trueActive.length)+'</b></div>']
-    .concat(Object.entries(byReason).sort((a,b)=>b[1]-a[1]).map(([reason,count])=>
-      '<div class="metric-line"><span>'+reason+' <span class="muted">(نشط حالياً — بانتظار تاريخ الإنهاء)</span></span><b>'+fmt(count)+'</b></div>'
-    ));
-  return {html: rowsHtml.join(''), total: activeAct.length, pendingCount: pending.length};
+  const html = '<thead><tr><th>الرقم</th><th>الاسم</th><th>القسم</th><th>المسمى الوظيفي</th><th>الجوال</th><th>البريد الإلكتروني</th><th>الحالة</th></tr></thead><tbody>'+
+    pending.map(r=>'<tr><td>'+val(r.employeeNo)+'</td><td>'+val(r.name)+'</td><td>'+sectionLabel(r.sectionKey)+'</td><td>'+val(r.job)+'</td><td>'+val(r.mobile)+'</td><td>'+val(r.email)+'</td><td><span class="pill amber">'+val(r.terminationReason)+'</span></td></tr>').join('')+
+    '</tbody>';
+  return {html: html, total: activeAct.length, pendingCount: pending.length};
 }
 
 function renderAll(){
@@ -408,8 +703,12 @@ function renderAll(){
   const payroll = sum(activeAct,'totalSalary');
   const avg = activeAct.length ? payroll/activeAct.length : 0;
   const missing = renderMissingData(activeAct);
+  if(turnoverDetailsVisible) renderTurnoverDetails();
   const scopeAllActive = activeRows(sectionScope(rows));
-  const scopeEOS = sectionScope(rows).filter(r=>r.status==='Terminated');
+  const leaversInScope = lastUpdate ? (lastUpdate.leavers||[]).filter(r=>currentSection==='all' || r.sectionKey===currentSection) : [];
+  const transfersInScope = lastUpdate ? (lastUpdate.transfers||[]).filter(r=>currentSection==='all' || r.sectionKey===currentSection || r.fromSectionKey===currentSection) : [];
+  const turnoverMoves = leaversInScope.length + transfersInScope.length;
+  const turnoverBase = scopeAllActive.length + leaversInScope.length;
 
   document.getElementById('kActive').textContent = fmt(activeAct.length);
   document.getElementById('kSaud').textContent = pct(saud, activeAct.length);
@@ -417,12 +716,13 @@ function renderAll(){
   document.getElementById('kAvg').textContent = fmt(Math.round(avg));
 
   const bd = statusBreakdown(activeAct);
-  document.getElementById('statusBreakdown').innerHTML = bd.html;
-  document.getElementById('statusBreakdownTotal').textContent = 'إجمالي "النشطين" المعروض أعلاه: ' + fmt(bd.total) + (bd.pendingCount ? ' — منهم ' + fmt(bd.pendingCount) + ' عندهم إشعار مغادرة' : '');
+  document.getElementById('statusBreakdownTable').innerHTML = bd.html;
+  document.getElementById('statusBreakdownCard').style.display = bd.pendingCount ? '' : 'none';
+  document.getElementById('statusBreakdownTotal').textContent = bd.pendingCount ? fmt(bd.pendingCount) + ' من إجمالي ' + fmt(bd.total) + ' موظف نشط' : '';
 
-  document.getElementById('saudAlert').textContent = 'نسبة السعودة: ' + pct(saud, activeAct.length);
-  document.getElementById('turnAlert').textContent = 'مؤشر الدوران: ' + pct(scopeEOS.length, scopeAllActive.length + scopeEOS.length);
-  document.getElementById('dataAlert').textContent = 'نواقص بيانات: ' + fmt(missing) + ' — اضغط للتفاصيل';
+  document.getElementById('saudAlert').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> نسبة السعودة: ' + pct(saud, activeAct.length);
+  document.getElementById('turnAlert').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> مؤشر الدوران: ' + pct(turnoverMoves, turnoverBase) + ' — اضغط للتفاصيل';
+  document.getElementById('dataAlert').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> نواقص بيانات: ' + fmt(missing) + ' — اضغط للتفاصيل';
 
   document.getElementById('chartATitle').textContent = currentSection==='all' ? 'عدد الموظفين حسب القسم' : 'عدد الموظفين حسب المسمى الوظيفي';
   try{
@@ -448,7 +748,6 @@ function renderAll(){
 const STORE_ROWS_KEY = 'hcc_rows';
 const STORE_UPDATE_KEY = 'hcc_last_update';
 
-// Wait (up to ~4s) for the Firebase module script above to finish initializing.
 function waitForFirebase(){
   if(window.firebaseStorage) return Promise.resolve(true);
   return new Promise(resolve=>{
@@ -480,25 +779,38 @@ async function loadCloudData(){
   if(rawUpdate){ try{ lastUpdate = JSON.parse(rawUpdate); }catch(e){ lastUpdate = null; } }
 }
 
-// ---------- Admin / upload ----------
+// ---------- Admin (gated by signed-in Firebase account, not a shared password) ----------
+function isAdminUser(){
+  return sessionStorage.getItem('uploadAuthOK') === 'true';
+}
+function checkUploadPassword(){
+  const val = (document.getElementById('uploadPassword').value||'').trim();
+  const err = document.getElementById('uploadPasswordErr');
+  if(val === UPLOAD_PASSWORD){
+    sessionStorage.setItem('uploadAuthOK', 'true');
+    err.classList.add('hide');
+    renderAdminLock();
+  }else{
+    err.textContent = 'كلمة المرور غير صحيحة.';
+    err.classList.remove('hide');
+  }
+}
 function renderAdminLock(){
-  const login = document.getElementById('adminLogin'), content = document.getElementById('adminContent');
-  login.classList.toggle('hide', adminAuthenticated);
-  content.classList.toggle('locked', !adminAuthenticated);
+  const denied = document.getElementById('adminDenied'), content = document.getElementById('adminContent');
+  const allowed = isAdminUser();
+  denied.classList.toggle('hide', allowed);
+  content.classList.toggle('hide', !allowed);
 }
-function unlockAdmin(){
-  const pass = document.getElementById('adminPass'), err = document.getElementById('adminError');
-  if(pass && pass.value === ADMIN_PASSWORD){ adminAuthenticated = true; sessionStorage.setItem('hcc_admin_auth','1'); err.classList.add('hide'); renderAdminLock(); }
-  else { err.classList.remove('hide'); }
-}
-function lockAdmin(){ adminAuthenticated = false; sessionStorage.removeItem('hcc_admin_auth'); document.getElementById('adminPass').value=''; renderAdminLock(); }
-async function resetDefault(){
+async function clearAllData(){
+  if(!isAdminUser()) return;
+  if(!confirm('هل أنت متأكد من مسح كل بيانات الموظفين من كل الأجهزة؟ هذا الإجراء لا يمكن التراجع عنه.')) return;
   const box = document.getElementById('uploadResult');
-  box.textContent = 'جاري الاستعادة...';
+  box.textContent = 'جاري المسح...';
   await cloudDelete(STORE_ROWS_KEY);
   await cloudDelete(STORE_UPDATE_KEY);
-  rows = DEFAULT_ROWS; lastUpdate = null;
-  box.innerHTML = '<b>تمت استعادة البيانات الافتراضية على كل الأجهزة.</b>';
+  rows = []; lastUpdate = null;
+  box.innerHTML = '<b>تم مسح كل البيانات على كل الأجهزة.</b>';
+  currentSection = 'all';
   renderAll();
 }
 function isSjahiStudent(o){
@@ -518,8 +830,6 @@ function looksLikeEmployeeSheet(sampleRow){
   const keys = Object.keys(sampleRow||{});
   return keys.some(k=>String(k).includes('الرقم الوظيفي') || /employee\s*(no|id)/i.test(k));
 }
-// يمنع تكرار نفس الموظف لو تكرر صفّه داخل نفس الشيت أو ظهر في أكثر من شيت داخل الملف.
-// يُبقي على آخر ظهور له في الملف (يُعتبر الأحدث)، عشان ما تتضاعف الرواتب والعدادات.
 function dedupeByEmployeeNo(arr){
   const map = new Map();
   let noIdCounter = 0;
@@ -530,7 +840,7 @@ function dedupeByEmployeeNo(arr){
   return {rows: Array.from(map.values()), duplicates: arr.length - map.size};
 }
 function readUpload(file){
-  if(!adminAuthenticated){ alert('رفع البيانات متاح فقط بعد إدخال الرقم السري في صفحة الأدمن.'); return; }
+  if(!isAdminUser()){ alert('رفع البيانات متاح فقط لحسابات الإدارة المخوّلة.'); return; }
   if(!file) return;
   const resultBox = document.getElementById('uploadResult');
   resultBox.textContent = 'جاري قراءة الملف...';
@@ -566,7 +876,13 @@ function computeDiff(oldRows, newRows){
     const old = oldById[id];
     return r.status==='Terminated' && old.status!=='Terminated';
   });
-  return {joiners, leavers: leaversMissing.concat(leaversTerminated)};
+  const transfers = newRows.filter(r=>{
+    const id = String(r.employeeNo);
+    if(!oldIds.has(id)) return false;
+    const old = oldById[id];
+    return r.status==='Active' && old.status==='Active' && old.sectionKey !== r.sectionKey;
+  }).map(r=>Object.assign({}, r, {fromSectionKey: oldById[String(r.employeeNo)].sectionKey}));
+  return {joiners, leavers: leaversMissing.concat(leaversTerminated), transfers};
 }
 async function processUploadedRows(allRows, fileName, duplicatesRemoved){
   const resultBox = document.getElementById('uploadResult');
@@ -578,7 +894,7 @@ async function processUploadedRows(allRows, fileName, duplicatesRemoved){
   }
   const diff = computeDiff(rows, matched);
   rows = matched;
-  lastUpdate = {at: new Date().toISOString(), fileName, totalScanned: allRows.length, totalMatched: matched.length, joiners: diff.joiners, leavers: diff.leavers};
+  lastUpdate = {at: new Date().toISOString(), fileName, totalScanned: allRows.length, totalMatched: matched.length, joiners: diff.joiners, leavers: diff.leavers, transfers: diff.transfers};
 
   resultBox.textContent = 'جاري الحفظ ومزامنة البيانات مع كل الأجهزة...';
   const savedRows = await cloudSet(STORE_ROWS_KEY, JSON.stringify(rows));
@@ -590,7 +906,7 @@ async function processUploadedRows(allRows, fileName, duplicatesRemoved){
   resultBox.innerHTML = 'تم تحميل <b>'+fmt(matched.length)+'</b> سجل ضمن الأقسام المحددة من أصل <b>'+fmt(allRows.length)+'</b> سجل تمت قراءته من الملف.<br>'
     + (duplicatesRemoved ? '⚠️ تم اكتشاف <b>'+fmt(duplicatesRemoved)+'</b> صف مكرر لنفس الرقم الوظيفي (بسبب تكرار داخل الملف أو تكرر الموظف في أكثر من شيت) — تم استبعاد التكرار تلقائياً والإبقاء على آخر ظهور له فقط.<br>' : '')
     + (studentsExcluded ? 'تم استثناء <b>'+fmt(studentsExcluded)+'</b> من طلاب SJAHI تلقائياً (مو موظفين).<br>' : '')
-    + 'الانضمامات: <b>'+fmt(diff.joiners.length)+'</b> — المغادرات: <b>'+fmt(diff.leavers.length)+'</b><br>'
+    + 'الانضمامات: <b>'+fmt(diff.joiners.length)+'</b> — المغادرات: <b>'+fmt(diff.leavers.length)+'</b> — النقل بين الأقسام: <b>'+fmt(diff.transfers.length)+'</b><br>'
     + '<span class="muted">'+syncNote+'</span>';
   currentSection = 'all';
   renderAll();
@@ -626,7 +942,6 @@ async function doSignIn(){
     err.textContent = msgs[res.code] || ('تعذّر تسجيل الدخول (' + res.code + ').');
     err.classList.remove('hide');
   }
-  // على النجاح، onAuthStateChanged بيتكفل بعرض التطبيق تلقائياً.
 }
 async function doSignOut(){
   if(window.firebaseAuthBridge) await window.firebaseAuthBridge.signOut();
@@ -634,10 +949,12 @@ async function doSignOut(){
 function showApp(user){
   document.getElementById('authGate').style.display = 'none';
   document.getElementById('appRoot').classList.remove('gated');
+  currentUserEmail = user && user.email ? user.email : null;
   const label = document.getElementById('authUserLabel');
-  if(label) label.textContent = user && user.email ? ('مسجّل الدخول: ' + user.email) : '';
+  if(label) label.textContent = currentUserEmail ? ('مسجّل الدخول: ' + currentUserEmail) : '';
 }
 function showLoginForm(){
+  currentUserEmail = null;
   document.getElementById('authGate').style.display = 'grid';
   document.getElementById('appRoot').classList.add('gated');
   document.getElementById('authChecking').classList.add('hide');
@@ -646,21 +963,30 @@ function showLoginForm(){
 
 // ---------- init ----------
 document.getElementById('fStatus').value = 'active';
+(function setAuthFooterTimestamp(){
+  const el = document.getElementById('authFooter');
+  if(!el) return;
+  const now = new Date();
+  const datePart = now.toLocaleDateString('ar-SA', { year:'numeric', month:'long', day:'numeric' });
+  const timePart = now.toLocaleTimeString('ar-SA', { hour:'2-digit', minute:'2-digit' });
+  el.textContent = datePart + ' — ' + timePart;
+})();
 (async function init(){
   buildSectionNav();
-  renderAdminLock();
   renderAll();
 
   const authReady = await waitForAuthBridge();
   if(!authReady){
-    // تعذّر تحميل نظام تسجيل الدخول (مثلاً لا يوجد اتصال إنترنت) — لا نعرض البيانات بدون تحقق.
-    document.getElementById('authChecking').textContent = 'تعذّر الاتصال بخدمة تسجيل الدخول. تحقق من الإنترنت وأعد تحميل الصفحة.';
+    document.getElementById('authCheckingMsg').textContent = 'تعذّر الاتصال بخدمة تسجيل الدخول. تحقق من الإنترنت وأعد تحميل الصفحة.';
+    document.getElementById('authCheckingIcon').classList.add('err-icon');
+    document.getElementById('authRetryBtn').classList.remove('hide');
     return;
   }
 
   window.firebaseAuthBridge.onChange(async (user)=>{
     if(user){
       showApp(user);
+      renderAdminLock();
       if(await hasCloudStorage()){
         await loadCloudData();
         buildSectionNav();
@@ -672,7 +998,6 @@ document.getElementById('fStatus').value = 'active';
     }
   });
 })();
-
 </script>
 </body>
 </html>
